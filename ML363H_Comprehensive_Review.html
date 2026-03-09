@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>363H Spring 2026 — Comprehensive Review</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script>MathJax = { tex: { inlineMath: [['$','$'], ['\\(','\\)'] }, displayMath: [['$$','$$'], ['\\[','\\]'] ] };</script>
+  <style>
+    :root { --bg: #1a1b26; --fg: #c0caf5; --accent: #7aa2f7; --muted: #565f89; }
+    body { font-family: 'Georgia', 'Times New Roman', serif; max-width: 820px; margin: 0 auto; padding: 2rem; background: var(--bg); color: var(--fg); line-height: 1.6; }
+    h1 { color: var(--accent); border-bottom: 2px solid var(--muted); padding-bottom: 0.3em; }
+    h2 { color: #bb9af7; margin-top: 2rem; }
+    h3 { color: #9ece6a; margin-top: 1.5rem; }
+    .proof { background: rgba(58,58,78,0.5); border-left: 4px solid var(--accent); padding: 0.8rem 1rem; margin: 1rem 0; }
+    .intuition { background: rgba(78,58,78,0.35); border-left: 4px solid #bb9af7; padding: 0.7rem 1rem; margin: 0.8rem 0; font-style: italic; }
+    .defn { background: rgba(58,78,58,0.3); border-left: 4px solid #9ece6a; padding: 0.6rem 1rem; margin: 0.8rem 0; }
+    ul { padding-left: 1.5rem; }
+    .toc { margin: 1.5rem 0; padding: 1rem; background: rgba(58,58,78,0.4); border-radius: 6px; }
+    .toc a { color: var(--accent); }
+    code { background: var(--muted); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.95em; }
+    .formula { margin: 0.6rem 0; }
+    .example { background: rgba(78,68,58,0.35); border-left: 4px solid #e0af68; padding: 0.6rem 1rem; margin: 0.8rem 0; }
+    .steps { margin: 0.5rem 0; padding-left: 1.2rem; }
+    .steps li { margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+
+<h1>363H Spring 2026 — All-Encompassing Review</h1>
+<p><strong>Narrative, motivation, and proofs</strong> from all lectures (Scribble Together + VOD + Gemini). <strong>Every item from your page-by-page list is included.</strong> Ordered by Scribble Together pages 1–84: use the TOC to jump. LaTeX renders via MathJax.</p>
+
+<div class="toc">
+  <strong>Contents (by Scribble Together page order)</strong>
+  <ol>
+    <li><a href="#sec1">Part I: Mistake-Bounded (Pages 1–11)</a></li>
+    <li><a href="#sec2">Part II: Winnow &amp; Weighted Majority (Pages 12–19)</a></li>
+    <li><a href="#sec6">Part III: Decision Trees (Pages 20–28)</a></li>
+    <li><a href="#sec5">Part IV: PAC Learning (Pages 29–41)</a></li>
+    <li><a href="#sec5">Part V: VC Dimension &amp; Radon (Pages 42–54)</a></li>
+    <li><a href="#sec55">Part VI: Compression, Oracles, DA, TDS (Pages 55–61)</a></li>
+    <li><a href="#sec4">Part VII: Perceptron (Pages 62–64)</a></li>
+    <li><a href="#sec2reg">Part VIII: Regression (Pages 65–74)</a></li>
+    <li><a href="#sec7">Part IX: Optimization &amp; Loss (Pages 75–84)</a></li>
+  </ol>
+</div>
+
+<!-- ========== PART I: Pages 1–11 ========== -->
+<h2 id="sec1">Part I: Mistake-Bounded Learning (Pages 1–11)</h2>
+
+<h3>1.1 The ML Workflow and the Mistake-Bounded Protocol (Pages 1–2)</h3>
+<p>Machine learning fits a model to data. The standard <strong>workflow</strong> has six components:</p>
+<ul class="steps">
+  <li><strong>Algorithms</strong> (problem setup) \(\rightarrow\) <strong>Training Data</strong> \(\rightarrow\) <strong>M.L. Algorithm</strong> \(\rightarrow\) <strong>Model</strong> \(\rightarrow\) <strong>Eval Model</strong> \(\rightarrow\) <strong>Validation</strong>.</li>
+</ul>
+<p>Learning is formalized via <strong>bounds on failure</strong>: we want to guarantee that the number of mistakes (or the generalization error) is limited.</p>
+<p>In <strong>mistake-bounded (online) learning</strong>, the setting is interactive. The protocol is:</p>
+<ul class="steps">
+  <li><strong>Instance</strong> \(x\) \(\rightarrow\) learner outputs <strong>Prediction</strong> \(\widehat{y}\) \(\rightarrow\) oracle reveals <strong>Label</strong> \(y\) \(\rightarrow\) learner may <strong>Update</strong> state.</li>
+</ul>
+<p>If \(\widehat{y} = y\), the state is unchanged. If \(\widehat{y} \ne y\), we count a <strong>mistake</strong> and the learner updates its internal state (e.g. its hypothesis). The goal is to guarantee that, no matter what sequence of examples nature presents (as long as the sequence is consistent with some target function in our class), the total number of mistakes is bounded.</p>
+<div class="defn">
+  <strong>Mistake bound (formal).</strong> A learner \(L\) has <strong>mistake bound</strong> \(M\) on concept class \(\mathcal{C}\) if, for <em>every</em> sequence of examples consistent with some \(f \in \mathcal{C}\) (i.e. the label of each \(x\) is \(f(x)\)), \(L\) makes at most \(M\) mistakes.
+</div>
+<div class="intuition">
+  We do not assume examples are drawn from a distribution; the sequence can be adversarial. The only promise is that there exists some target function in \(\mathcal{C}\) that labels every example correctly. A good learner has a small \(M\) (and efficient update time).
+</div>
+
+<h3>1.2 Monotone Disjunctions and the Goal (Pages 2–3)</h3>
+<p>A natural concept class is <strong>monotone disjunctions</strong> over the Boolean domain \(X = \{0,1\}^d\). Each concept is a disjunction of (unnegated) literals: \(f(x) = x_{i_1} \lor x_{i_2} \lor \cdots\). So the function is 1 if and only if at least one of the chosen coordinates is 1.</p>
+<div class="example">
+  <strong>Concrete example.</strong> Let \(f(x) = x_1 \lor x_3 \lor x_6\). Then \(f(1,0,0,\ldots) = 1\) (first bit is 1), \(f(0,0,1,0,0,0,\ldots) = 1\) (third bit is 1), and \(f(0,1,0,1,0,0,\ldots) = 0\) (none of bits 1, 3, 6 is 1). Our goal is to design a learner that has mistake bound \(MB \le d\) for this class—so we make at most \(d\) mistakes before we have identified the target (or equivalent hypothesis).
+</div>
+
+<h3>1.3 The Elimination Algorithm (Pages 3–4)</h3>
+<p>The <strong>elimination algorithm</strong> maintains a hypothesis that is a disjunction of the literals we still believe could be in the target. We start by being maximally cautious: we assume every variable might be in the disjunction.</p>
+<ul class="steps">
+  <li><strong>Initialization:</strong> \(h = x_1 \lor x_2 \lor \cdots \lor x_d\).</li>
+  <li><strong>Prediction:</strong> On instance \(x\), predict 1 if and only if at least one of the literals in \(h\) is 1 in \(x\) (i.e. the current disjunction evaluates to true on \(x\)).</li>
+  <li><strong>Update (on a mistake):</strong> We only make a mistake when we predicted 1 but the true label is 0. In that case, the target \(f^*\) evaluated to 0 on \(x\), so <em>every</em> literal in \(f^*\) must be 0 in \(x\). Therefore every literal that was 1 in \(x\) cannot belong to \(f^*\). We remove from \(h\) every \(x_i\) for which the \(i\)-th coordinate of \(x\) was 1.</li>
+</ul>
+<div class="example">
+  <strong>Trace.</strong> Suppose the target is \(f^* = x_2 \lor x_4 \lor x_7 \lor x_8\). We start with \(h = x_1 \lor \cdots \lor x_d\). If we see \(x = (1,0,1,0,\ldots)\) and we predict 1 (correct). Later we see \(x = (1,0,1,0,\ldots)\) with label 0—impossible for this target, so assume a different \(x\). For an instance with \(x_1 = 1, x_3 = 1\) and label 0, we remove \(x_1\) and \(x_3\) from \(h\), since they cannot be in \(f^*\). So each such mistake removes at least one literal from \(h\).
+</div>
+<div class="proof">
+  <strong>Why \(MB = d\).</strong> Every mistake (false positive) causes us to remove at least one literal from \(h\). We never remove a literal that is in \(f^*\), because when the label is 0, every literal in \(f^*\) is 0 in \(x\), so we only remove literals that were 1 in \(x\)—and those cannot be in \(f^*\). We start with \(d\) literals and only remove literals; so we can remove at most \(d\) literals, hence at most \(d\) mistakes. So the mistake bound is \(d\).
+</div>
+
+<h3>1.4 General Disjunctions and the Reduction (Pages 4–5)</h3>
+<p>If we allow <strong>negated</strong> literals, we have general disjunctions, e.g. \(f(x) = x_1 \lor \bar{x}_2 \lor x_7 \lor \bar{x}_{23}\). We reduce to the monotone case by introducing new variables: for each original variable \(X_i\), define \(Y_i = \bar{X}_i\). So every general disjunction on \(d\) variables becomes a monotone disjunction on \(2d\) “literals” (the \(x_i\) and the \(y_i\)). The mapping is \((x_1,\ldots,x_d) \mapsto (x_1,\ldots,x_d, y_1,\ldots,y_d)\) with \(y_i = 1 - x_i\). Running the elimination algorithm on these \(2d\) literals gives mistake bound <strong>\(MB = 2d\)</strong>.</p>
+<div class="proof">
+  <strong>Why \(MB = 2d\) for general disjunctions.</strong> The reduction doubles the variable space: each literal (positive or negative) in the original formula corresponds to exactly one of the \(2d\) monotone literals. Elimination never removes a “true” literal (one in the target), and each mistake removes at least one literal from the current hypothesis. So at most \(2d\) removals, hence at most \(2d\) mistakes.
+</div>
+<div class="intuition">
+  Example: \(f(x) = \bar{x}_1 \lor \bar{x}_2 \lor \cdots \lor \bar{x}_d\) uses only negated literals. In the reduced space this is a monotone disjunction on \(y_1,\ldots,y_d\), so we need at most \(d\) mistakes there; in the full \(2d\)-literal space the bound is \(2d\).
+</div>
+<div class="example"><strong>Visualization (p.5).</strong> Map \((x, \bar{x})\) to a higher-dimensional monotone vector: the point \((x_1,\ldots,x_d)\) becomes \((x_1,\ldots,x_d, 1-x_1,\ldots,1-x_d)\).</div>
+
+<h3>1.5 The Halving Algorithm (Pages 6–7)</h3>
+<p>For any <strong>finite</strong> concept class \(\mathcal{C}\), the <strong>halving algorithm</strong> gives an information-theoretic mistake bound. We maintain the set of functions in \(\mathcal{C}\) that are still consistent with all past examples. On each round we predict by <strong>majority vote</strong> over this set. If we are wrong, the true function was in the minority; every function that agreed with our (wrong) prediction is inconsistent with the true label and can be eliminated. At least half of the consistent functions had to agree with the majority, so at least half are eliminated.</p>
+<div class="proof">
+  <strong>Mistake bound \(\log_2 |\mathcal{C}|\).</strong> Let \(N_t\) be the number of functions still consistent after \(t\) mistakes. Initially \(N_0 = |\mathcal{C}|\). After each mistake, \(N_{t+1} \le N_t/2\). So after \(M\) mistakes, \(N_M \le |\mathcal{C}| \cdot 2^{-M}\). We must always have \(N_M \ge 1\) (the true function remains consistent). So \(|\mathcal{C}| \cdot 2^{-M} \ge 1\), i.e. \(2^M \le |\mathcal{C}|\), hence \(M \le \log_2 |\mathcal{C}|\).
+</div>
+<div class="example">
+  If \(|\mathcal{C}| = 1{,}000{,}000\), then \(\log_2 |\mathcal{C}| = 20\), so we make at most 20 mistakes. The bound is information-theoretically optimal (we need at least \(\log_2 |\mathcal{C}|\) bits to identify the target), but the algorithm can be computationally expensive because we must maintain and vote over the whole consistent set.
+</div>
+<p><strong>Goals for learning algorithms:</strong> we want both a small mistake bound and efficiency (polynomial time per round). Halving gives the optimal mistake bound for finite \(\mathcal{C}\) but may be intractable; elimination for disjunctions is efficient and achieves \(MB = d\) or \(2d\).</p>
+
+<h3>1.6 Decision Lists, DNF, and the Bag Algorithm (Pages 7–11)</h3>
+<p><strong>Why these three belong together.</strong> So far we learned <em>disjunctions</em> (OR of literals) with elimination and <em>any finite class</em> with halving. The next step is: what about <em>richer</em> Boolean function classes? This section introduces two such classes—<strong>decision lists</strong> and <strong>DNF</strong>—and one <strong>algorithm</strong>, the <strong>bag algorithm</strong>. The link is: <em>decision lists</em> are the concept class we care about here; the <em>bag algorithm</em> is the mistake-bounded learning algorithm for that class (so “decision lists” = what we learn, “bag algorithm” = how we learn them). <em>DNF</em> is a different, also rich, representation (OR of ANDs); it appears in the same place in the notes to show the progression from “OR of literals” to “OR of ANDs” and to contrast with decision lists—we have a concrete algorithm for decision lists, while learning DNF in general is hard. So: one concept class + its algorithm (decision lists + bag), plus a related class for context (DNF).</p>
+
+<div class="defn">
+  <strong>Decision lists (the concept class).</strong> A <strong>decision list</strong> is a sequence of rules \((L_1, b_1), (L_2, b_2), \ldots\), where each \(L_i\) is a conjunction of literals and \(b_i \in \{0,1\}\). On input \(x\), we find the first \(i\) such that \(L_i(x)\) is true and output \(b_i\). So the list is like an if-then-else chain (e.g. “if \(\bar{x}_4\) then …; else if \(x_2\) then …; …”). This is a <em>different</em> concept class from disjunctions: decision lists can express more complex functions (order matters; we can have nested conditions). We want to learn an unknown decision list in the mistake-bounded model—that is what the bag algorithm does.
+</div>
+<p><strong>DNF (a related representation, for contrast).</strong> <strong>DNF (Disjunctive Normal Form)</strong> is “OR of ANDs,” e.g. \(x_1 x_2 x_7 \lor x_{11} \lor x_4 \bar{x}_5\). So we go from disjunctions (OR of literals) to DNF (OR of *terms*, where each term is an AND). The number of possible \(k\)-term DNFs can be as large as \(d^{O(k)}\). Learning \(k\)-term DNF in the worst case is hard; the notes mention this for scope. So in this section: decision lists get a concrete algorithm (bag); DNF is the “other” rich Boolean class that appears alongside for comparison and complexity context.</p>
+<p><strong>The bag algorithm (how we learn decision lists).</strong> The <strong>bag algorithm</strong> is the online/mistake-bounded algorithm for learning decision lists of length \(k\). One maintains \(k\) “bags” of rules. Each round: receive instance \(x\) → <strong>Predict</strong> using the current list (first rule that fires) → receive true label \(y\) → on a mistake, <strong>Update</strong> by demoting the rule that fired (the one whose condition was satisfied) to a later bag, so it is consulted later in the order. So the <em>order</em> of rules is updated based on errors. <strong>Failure trace (p.10):</strong> If \(L_i(x)=1\) and we predict TRUE but the true label is FALSE, we made a mistake and demote that rule.</p>
+<div class="proof">
+  <strong>Counting decision lists (p.11).</strong> The number of distinct decision lists of length \(k\) on \(n\) variables depends on the exact model (e.g. 1-decision lists: each \(L_i\) is a single literal). In general, each rule has a condition (conjunction over literals) and an output bit; the order of rules matters. This count feeds into mistake bounds and sample complexity for the class.
+</div>
+
+<!-- ========== PART II: Pages 12–19 ========== -->
+<h2 id="sec2">Part II: Winnow &amp; Weighted Majority (Pages 12–19)</h2>
+
+<h3>2.1 Mistake-Bound Comparison and Winnow (Pages 12–14)</h3>
+<p>For <strong>monotone disjunctions</strong> over \(d\) variables (the same class as in Part I), the trivial <strong>elimination</strong> algorithm already achieves mistake bound <strong>\(O(d)\)</strong> (or \(O(2d)\) for general disjunctions with negations)—independent of how many literals \(k\) are in the target. So we don’t need Winnow to get a finite bound. Winnow’s advantage is <strong>attribute efficiency</strong>: if the target disjunction has only \(k\) relevant variables (e.g. \(f^* = x_{11} \lor x_2 \lor x_{17}\) with \(k=3\) and \(d\) large), Winnow achieves mistake bound <strong>\(O(k \log d)\)</strong>, which can be much smaller than \(d\) when \(k \ll d\). So the comparison is: elimination \(O(d)\) vs Winnow \(O(k \log d)\); when the target is sparse, Winnow makes fewer mistakes.</p>
+<p><strong>Winnow</strong> maintains a weight \(w_i \ge 0\) for each of the \(d\) variables. Initially \(w_i = 1\) for all \(i\), and we use a <strong>threshold</strong> \(\theta = d\). We predict 1 if and only if \(\sum_{i=1}^d w_i x_i \ge \theta\). So we are comparing a weighted sum of the current instance to the threshold.</p>
+<ul class="steps">
+  <li><strong>Type A (promotion, false negative):</strong> We predicted 0 but the true label is 1. So \(\sum_i w_i x_i < \theta\). We double \(w_i\) for every \(i\) with \(x_i = 1\). This increases the weighted sum for similar examples in the future so we are more likely to predict 1.</li>
+  <li><strong>Type B (demotion, false positive):</strong> We predicted 1 but the true label is 0. So \(\sum_i w_i x_i \ge \theta\). We set \(w_i := 0\) for every \(i\) with \(x_i = 1\). So we zero out the weights of all active variables, reducing the sum sharply.</li>
+</ul>
+<div class="example">
+  <strong>Sparse target.</strong> Suppose \(f^*(x) = x_{11} \lor x_2 \lor x_{17}\) (only 3 relevant variables, \(k=3\)). Winnow will quickly boost the weights of indices 2, 11, 17 when they appear in positive examples, and zero out others when they appear in negative examples.
+</div>
+<div class="proof">
+  <strong>Bound \(2k \log_2 d\).</strong> Let \(W = \sum_i w_i\) (the potential). <br><br>
+  <em>Promotions:</em> Only variables in the true disjunction ever get doubled (others get zeroed when they appear in a negative example). Each such variable has weight at most \(\theta = d\) before we would predict 1. So each of the \(k\) relevant literals can be doubled at most \(\log_2 d\) times. Hence number of Type A mistakes \(\le k \log_2 d\).<br><br>
+  <em>Demotions:</em> On a Type B mistake we had \(\sum_i w_i x_i \ge \theta = d\), and we set to 0 all \(w_i\) with \(x_i = 1\). So the total weight \(W\) drops by at least \(d\). On a Type A mistake we double some \(w_i\) with \(x_i = 1\); before the update we had \(\sum_i w_i x_i < d\), so the increase in \(W\) is less than \(d\). So demotions decrease \(W\) by \(\ge d\) and promotions increase \(W\) by \(< d\). The total weight starts at \(d\) and never goes negative, so the number of demotions is at most the number of promotions (up to a constant). So total mistakes \(\le 2 \cdot k \log_2 d = O(k \log d)\).
+</div>
+
+<h3>2.2 Weighted Majority (Pages 14–16)</h3>
+<p>In the <strong>experts</strong> setting we have \(K\) experts. Each round we see an instance and must predict; we get the true label and see which experts were wrong. The goal is to have our total mistakes close to the <strong>best expert</strong> (the one that makes the fewest mistakes \(m\)).</p>
+<p><strong>Weighted Majority:</strong> Maintain a weight \(w_i\) for each expert (initially 1). Predict by weighted majority vote. When we make a mistake, <strong>halve</strong> the weight of every expert that was wrong: \(w_i \leftarrow w_i/2\).</p>
+<div class="proof">
+  <strong>Bound \(M \le 2.4(m + \log K)\).</strong> Let \(W_t\) be the total weight after round \(t\). When we make a mistake, the wrong experts had combined weight \(\ge W_t/2\) (because we follow the weighted majority). After halving them, \(W_{t+1} \le \frac{1}{2}(\text{wrong}) + (\text{right}) = W_t - \frac{1}{2}(\text{wrong}) \le W_t - W_t/4 = \frac{3}{4} W_t\). So after \(M\) mistakes, \(W \le K (3/4)^M\). The best expert (with \(m\) mistakes) has weight \((1/2)^m\). So \((1/2)^m \le W \le K(3/4)^M\). Taking logs: \(-m \ln 2 \le \ln K + M \ln(3/4)\), so \(M \ln(4/3) \le m \ln 2 + \ln K\), hence <strong>\(M \le \frac{m + \log K}{\log(4/3)}\)</strong> (with log in same base). With natural log: \(M \le \frac{\ln 2}{\ln(4/3)}(m + \frac{\ln K}{\ln 2}) \approx 2.41(m + \log_2 K)\).
+</div>
+<div class="intuition">
+  The total weight drops by a factor of at most \(3/4\) on each of our mistakes, while the best expert’s weight is \((1/2)^m\). So we cannot make too many mistakes or the total weight would fall below the best expert’s weight. The \(\log K\) term is the price for not knowing which expert is best in advance.
+</div>
+
+<h3>2.3 Randomized Weighted Majority (Page 17)</h3>
+<p><strong>Setup.</strong> We have \(K\) experts. Each round we see an instance and must predict \(\pm 1\); we get the true label and see which experts were wrong. As in Weighted Majority, we maintain a weight \(w_i\) per expert (initially 1). The difference: we use a parameter \(\epsilon \in (0, 1/2)\) and (i) <strong>penalize</strong> each incorrect expert by a factor \((1-\epsilon)\): if expert \(i\) is wrong, set \(w_i \leftarrow (1-\epsilon) w_i\); (ii) <strong>predict randomly</strong>: if the total weight of experts saying \(+1\) is \(w_+\) and the total weight of all experts is \(W\), we predict \(+1\) with probability \(w_+/W\) and \(-1\) with probability \(1 - w_+/W\). So we follow the weighted proportion. Let \(\ell_t\) be the <strong>expected loss</strong> of our algorithm at time \(t\) (we lose 1 if we guess incorrectly, 0 otherwise). Then \(\ell_t\) equals the (weighted) proportion of experts who answer incorrectly at that round. The goal is to bound the total expected loss \(\sum_t \ell_t\) in terms of the best expert’s loss \(\mathrm{opt}\).</p>
+
+<div class="proof">
+  <strong>(a) Weight update: \(W_t = W_{t-1}(1 - \epsilon \ell_{t-1})\).</strong><br>
+  At the end of round \(t-1\), the total weight is \(W_{t-1}\). The weighted proportion of experts who were wrong in round \(t-1\) is \(\ell_{t-1}\), so the total weight on wrong experts is \(\ell_{t-1} W_{t-1}\). After the update: every wrong expert’s weight is multiplied by \((1-\epsilon)\), and every correct expert’s weight is unchanged. So
+  \[
+  W_t = (1-\epsilon)\bigl(\ell_{t-1} W_{t-1}\bigr) + \bigl(1 - \ell_{t-1}\bigr) W_{t-1}
+  = W_{t-1}\bigl[(1-\epsilon)\ell_{t-1} + (1 - \ell_{t-1})\bigr]
+  = W_{t-1}(1 - \epsilon \ell_{t-1}).
+  \]
+</div>
+
+<div class="proof">
+  <strong>(b) Expected loss bound: \((1+\epsilon)\,\mathrm{opt} + \frac{\log K}{\epsilon}\).</strong><br>
+  By (a), \(W_t = W_{t-1}(1 - \epsilon \ell_{t-1})\). Unrolling, \(W_T = W_0 \prod_{t=1}^{T} (1 - \epsilon \ell_t)\). Initially \(W_0 = K\). So
+  \[
+  W_T = K \prod_{t=1}^{T} (1 - \epsilon \ell_t).
+  \]
+  Let \(\mathrm{opt} = m\) be the number of mistakes of the best expert. That expert’s weight is multiplied by \((1-\epsilon)\) exactly \(m\) times, so its final weight is \((1-\epsilon)^m\). Since every weight is nonnegative, we have \((1-\epsilon)^m \le W_T\). Thus
+  \[
+  (1-\epsilon)^m \le K \prod_{t=1}^{T} (1 - \epsilon \ell_t).
+  \]
+  Take natural log:
+  \[
+  m \ln(1-\epsilon) \le \ln K + \sum_{t=1}^{T} \ln(1 - \epsilon \ell_t).
+  \]
+  Use the inequality (for \(x \in (0, 1/2)\)): \(-x^2 - x \le \ln(1-x) \le -x\).<br>
+  • For \(x = \epsilon\): \(\ln(1-\epsilon) \ge -\epsilon^2 - \epsilon\), so \(m\ln(1-\epsilon) \ge m(-\epsilon^2 - \epsilon)\).<br>
+  • For \(x = \epsilon \ell_t\) (with \(\epsilon \ell_t \le \epsilon < 1/2\)): \(\ln(1 - \epsilon \ell_t) \le -\epsilon \ell_t\), so \(\sum_t \ln(1 - \epsilon \ell_t) \le -\epsilon \sum_t \ell_t = -\epsilon L\), where \(L = \sum_{t=1}^{T} \ell_t\) is the total expected loss.<br>
+  So
+  \[
+  m(-\epsilon^2 - \epsilon) \le m\ln(1-\epsilon) \le \ln K + \sum_t \ln(1 - \epsilon \ell_t) \le \ln K - \epsilon L.
+  \]
+  Hence \(-m\epsilon - m\epsilon^2 \le \ln K - \epsilon L\), so \(\epsilon L \le \ln K + m\epsilon + m\epsilon^2\), and
+  \[
+  L \le \frac{\ln K}{\epsilon} + m(1 + \epsilon) = (1+\epsilon)\,m + \frac{\ln K}{\epsilon} = (1+\epsilon)\,\mathrm{opt} + \frac{\log K}{\epsilon}.
+  \]
+  So the expected loss of the algorithm is at most \((1+\epsilon)\,\mathrm{opt} + \frac{\log K}{\epsilon}\).
+</div>
+<div class="intuition">
+  Tuning \(\epsilon\): smaller \(\epsilon\) gives a better multiplicative factor \((1+\epsilon)\) but a larger additive term \(\log K/\epsilon\). So we get a smooth tradeoff between being close to the best expert (multiplicative) and the cost of not knowing which expert is best (additive).
+</div>
+
+<h3>2.4 Probability and Expectation (Pages 17–19)</h3>
+<p><strong>Random variables and sample spaces (p.17):</strong> A random variable \(X\) is a function from outcomes (e.g. outcomes of a random experiment) to numbers. The <strong>expected value</strong> is</p>
+<div class="formula">\[ E[X] = \sum_k \Pr[k] \cdot X(k). \]</div>
+<p>(Or the integral in the continuous case.)</p>
+<div class="example">
+  <strong>Die roll (p.17).</strong> Roll a fair 6-sided die; \(X\) = outcome. Then \(E[X] = \frac{1}{6}(1+2+3+4+5+6) = 3.5\). <strong>Quiz returns (p.18):</strong> 40 students; each gets their own quiz back with some probability. The expected number who get their own quiz is the sum of the individual probabilities (by linearity). So we can compute \(\mathbb{E}[\text{# matches}]\) without enumerating all permutations.
+</div>
+<p><strong>Linearity of expectation (p.19):</strong> \(E[X_1 + X_2 + \cdots + X_n] = E[X_1] + E[X_2] + \cdots + E[X_n]\). This holds <em>even when the \(X_i\) are dependent</em>—no independence is required. That is the “miracle”: it simplifies many calculations. We use it to analyze algorithms (e.g. expected number of mistakes) and to reason about the recursive structure of decision trees (expectation over random splits).</p>
+
+<h2 id="sec6">6. Decision Trees (Pages 20–28)</h2>
+
+<p><strong>Depth vs size (p.20):</strong> For a Boolean decision tree, <strong>depth</strong> = longest path from root to leaf; <strong>size</strong> = number of nodes (or leaves). The best-known bound for DT learning is <strong>quasi-polynomial</strong>: \(n^{O(\log n)}\) (p.20 formula).</p>
+<p><strong>Tree → Decision List (p.21):</strong> Steps to convert a Decision Tree into a Decision List: expand the literal space (introduce variables for conjunctions along paths), then list rules in an order consistent with the tree structure.</p>
+<div class="defn"><strong>Rank of a decision tree (p.22):</strong> Recursive definition. \(\mathrm{Rank}(\mathrm{leaf})=0\). If \(\mathrm{Rank}(T_L)=\mathrm{Rank}(T_R)\) then \(\mathrm{Rank}(T)=\mathrm{Rank}(T_L)+1\); else \(\mathrm{Rank}(T)=\max(\mathrm{Rank}(T_L),\mathrm{Rank}(T_R))\).</div>
+<div class="proof"><strong>Theorem (p.23–25):</strong> Tree of size \(S\) has rank \(\le \log_2 S\). Induction: base \(S=1\), \(R=0\). For \(\mathrm{Rank}(T)=k\), both subtrees have rank \(\ge k-1\) ⇒ sizes \(\ge 2^{k-1}\) ⇒ \(S \ge 2\cdot 2^{k-1}+1 = 2^k+1\) ⇒ \(k \le \log_2 S\). Rank-\(k\) trees can be written as \(k\)-Decision Lists (induction on rank+size).</div>
+<div class="example"><strong>Training set error (p.26):</strong> 10 points labeled +, 5 labeled −.</div>
+<p><strong>Root criteria (p.26):</strong> Put variable \(x_i\) at root to minimize weighted impurity sum. <strong>Recursive building (p.27):</strong> Build subtrees based on maximized label probability. <strong>Gini index (p.27):</strong> \(G(a) = 2a(1-a)\).</p>
+<div class="example"><strong>Gini splitting (p.28):</strong> Visualization of greedy tree building using Gini-based splits.</div>
+<p><strong>Motivation.</strong> Decision trees are another rich Boolean representation: they encode classifiers as recursive if-then-else programs. This section serves two goals. First, it explains how to <em>build</em> trees (greedy impurity minimization, Gini) and why this is reasonable. Second, it connects trees back to <strong>decision lists</strong> from Part I: using the notion of <strong>rank</strong>, we show that any bounded-rank tree can be converted into a bounded-length decision list. So the rank theorem and the “tree → decision list” construction explain how expressive trees relate to the decision-list class and why trees appear here.</p>
+
+<h3>6.1 Greedy Construction</h3>
+<p>At each node we have a subset of the data. We choose a feature (or literal) and split the data by that feature. The <strong>gain</strong> of a split measures how much we reduce error (or impurity) by splitting:</p>
+<div class="formula">
+  \[ \mathrm{Gain} = \mathrm{Error}(\mathrm{parent}) - \sum_{\mathrm{children}} \frac{n_{\mathrm{child}}}{n_{\mathrm{parent}}}\,\mathrm{Error}(\mathrm{child}). \]
+</div>
+<p>We pick the split that maximizes Gain. Repeat until a stopping condition (e.g. pure node or max depth).</p>
+<div class="intuition">
+  <strong>Why greedy?</strong> Finding the optimal tree is NP-hard. Greedy gain maximization is fast and in practice often gives good trees. We’re effectively asking: “which question gives the most information about the label?”
+</div>
+
+<h3>6.2 Potential Functions (Splitting Criteria)</h3>
+<p>We need a way to measure “error” or “impurity” at a node. If a fraction \(a\) of the node is positive, we want a function \(\Phi(a)\) that is 0 when the node is pure (\(a=0\) or \(a=1\)) and larger when \(a\) is near \(1/2\).</p>
+<ul>
+  <li><strong>Misclassification rate:</strong> \(\Phi(a) = \min(a, 1-a)\). This is the fraction we’d misclassify if we predict the majority. Not differentiable at \(a = 1/2\).</li>
+  <li><strong>Gini index (p.27):</strong> \(\Phi(a) = G(a) = 2a(1-a)\). Smooth, differentiable. For \(a \in [0,1]\), \(2a(1-a) \ge \min(a,1-a)\).</li>
+</ul>
+<p><strong>Optimization geometry (p.28):</strong> The curve \(\min(x, 1-x)\) has a corner at \(x = 1/2\); the Gini curve \(2x(1-x)\) is smooth and approximates it from above. Visualizing both shows why Gini is preferred for gradient-based or numeric optimization while still tracking impurity.</p>
+<div class="proof">
+  <strong>Why \(2a(1-a) \ge \min(a,1-a)\)?</strong> For \(a \in [0, 1/2]\), \(\min(a,1-a) = a\). We need \(2a(1-a) \ge a\), i.e. \(2(1-a) \ge 1\), i.e. \(a \le 1/2\), which holds. For \(a \in [1/2, 1]\), \(\min(a,1-a) = 1-a\); we need \(2a(1-a) \ge 1-a\), i.e. \(2a \ge 1\), i.e. \(a \ge 1/2\), which holds. So minimizing weighted Gini at the children gives a proxy that upper-bounds the drop in training misclassification; minimizing Gini tends to reduce training error.
+</div>
+<div class="intuition">
+  <strong>Why use Gini?</strong> Smoothness makes optimization (e.g. gradient-based or numeric) easier. The fact that it’s an upper bound means that if we reduce Gini, we’re also reducing (or not increasing) the misclassification error we care about.
+</div>
+
+<h3>6.3 Random Forests</h3>
+<p>Ensemble of trees: (1) <strong>Bagging:</strong> train each tree on a bootstrap sample (sample \(n\) examples with replacement from the training set). (2) <strong>Feature randomness:</strong> at each split, consider only a random subset of features. Predict by majority vote over trees.</p>
+<div class="intuition">
+  <strong>Why it works.</strong> Trees have high variance (small change in data can change the tree a lot). Averaging many trees reduces variance. Bagging and feature randomness make trees diverse, so the average is more stable than a single tree.
+</div>
+
+<h3>6.4 Decision Trees and Decision Lists (Rank Bound)</h3>
+<p><strong>Rank: measuring “balanced depth”.</strong> The <strong>rank</strong> of a decision tree is defined recursively. Every leaf has rank 0. If an internal node has children of ranks \(r_1\) and \(r_2\), then its rank is
+\[
+  \mathrm{Rank}(T) =
+  \begin{cases}
+    r_1 + 1 & \text{if } r_1 = r_2,\\
+    \max(r_1, r_2) & \text{otherwise.}
+  \end{cases}
+\]
+So we “add 1” only when both subtrees have the same rank (a kind of symmetry); otherwise we just take the larger rank. Intuitively, rank counts how many times we can go down to two subtrees of equal depth.</p>
+<div class="proof">
+  <strong>Theorem: \(\mathrm{Rank}(T) \le \log_2 S\)</strong> where \(S\) is the number of leaves (size). <em>Proof by induction on \(S\).</em><br>
+  <strong>Base case.</strong> If \(S = 1\), the tree is a single leaf, so \(\mathrm{Rank}(T) = 0\) and \(0 \le \log_2 1 = 0\).<br><br>
+  <strong>Inductive step.</strong> Assume the theorem holds for all trees with fewer than \(S\) leaves. Let \(T\) have left subtree \(T_L\) and right subtree \(T_R\) with sizes \(S_L, S_R\) and ranks \(r_L, r_R\). Then \(S = S_L + S_R + 1\). We consider two cases.
+  <ul>
+    <li><strong>Case 1: \(r_L = r_R\).</strong> Then \(\mathrm{Rank}(T) = r_L + 1\). For the rank to be \(k\), we must have \(r_L = r_R = k-1\). By the induction hypothesis applied to each subtree, a subtree of rank \(\ge k-1\) must have at least \(2^{k-1}\) leaves. So \(S_L \ge 2^{k-1}\) and \(S_R \ge 2^{k-1}\). Hence
+    \[
+      S = S_L + S_R + 1 \;\ge\; 2^{k-1} + 2^{k-1} + 1 = 2^k + 1,
+    \]
+    so \(k \le \log_2 S\).</li>
+    <li><strong>Case 2: \(r_L \ne r_R\).</strong> Then \(\mathrm{Rank}(T) = \max(r_L, r_R)\). By the induction hypothesis, \(r_L \le \log_2 S_L\) and \(r_R \le \log_2 S_R\). Since \(S_L, S_R < S\) and \(S = S_L + S_R + 1\), each of \(\log_2 S_L\) and \(\log_2 S_R\) is at most \(\log_2 S\). Thus \(\mathrm{Rank}(T) = \max(r_L, r_R) \le \log_2 S\).</li>
+  </ul>
+  In both cases, \(\mathrm{Rank}(T) \le \log_2 S\), completing the induction.
+</div>
+<div class="intuition">
+  <strong>Interpretation.</strong> Rank roughly measures “balanced depth” of the tree: how many times you can go down to two subtrees of comparable depth. A tree with \(S\) leaves cannot have too many such balanced levels—at most \(\log_2 S\). This is why rank is at most \(\log_2 S\).
+</div>
+<p><strong>From trees to decision lists.</strong> A decision tree of rank \(r\) can be turned into a <strong>decision list</strong> in which each rule is a conjunction of at most \(r\) literals. Conceptually, each root-to-leaf path corresponds to a rule of the form “if (all tests along that path hold) then output (leaf label).” The rank bound guarantees that, after a suitable simplification, these conjunctions never need more than \(r\) literals.</p>
+<div class="proof">
+  <strong>Conversion idea (sketch).</strong> Traverse the tree and, for each leaf labeled 1, form a conjunction of literals describing the path from the root to that leaf (for each internal node on the path, include \(x_i\) if we took the “\(x_i=1\)” child, or \(\bar{x}_i\) if we took the “\(x_i=0\)” child). Order these conjunctions so that more specific paths come earlier, and add a final default rule for the remaining points. One can prove, by induction on the tree using the rank definition, that when \(\mathrm{Rank}(T) \le r\), we can choose these conjunctions so that each has length at most \(r\). Thus the resulting representation is a \(r\)-decision list computing the same function as the tree. This connects the expressiveness of trees (via rank) to the decision-list class studied earlier.</div>
+
+<h3>6.5 Distribution Shift (TDS)</h3>
+<p><strong>Test-time distribution shift (TDS):</strong> Data from \(D'\) may differ from training \(D\). Accept if \(D'=D\), Reject if shifted. Localized discrepancy (e.g. match moments) to certify small shift.</p>
+
+<!-- ========== PART VII: Pages 75–84 ========== -->
+<h2 id="sec5">5. PAC Learning and Generalization (Pages 29–41)</h2>
+
+<p><strong>Assumptions (p.29):</strong> Fixed distribution \(D\); i.i.d. draws; ground truth \(c\).</p>
+<div class="example"><strong>Statistical evaluation (p.30):</strong> Classifier \(h\) with true error \(\ge 0.3\). Over 20 random draws, the probability that \(h\) remains consistent with all 20 is at most \((1 - 0.3)^{20} = (0.7)^{20} \approx 2 \times 10^{-5}\). So we can “catch” a bad model with high probability.</div>
+<p><strong>Domain and sample (p.31):</strong> \(X = \{0,1\}^n\); coordinates; labels. PAC workflow: Domain \(X\) \(\rightarrow\) Coordinates \(\rightarrow\) Label \(\rightarrow\) PAC Algorithm \(\rightarrow\) Hypothesis \(h\).</p>
+<p><strong>Hold-out and validation (p.32):</strong> <strong>Hold-out methodology:</strong> Reserve a subset of the data (not used for training); evaluate the model on this set to estimate true error. The probability that an inaccurate hypothesis (error \(> \epsilon\)) remains consistent with \(t\) hold-out samples is \(\le (1-\epsilon)^t\).</p>
+<p><strong>Input parameters (p.33):</strong> Error \(\epsilon\), Confidence \(\delta\). <strong>Example:</strong> 95% confidence, 0.03 error ⇒ \(m \ge \frac{1}{\epsilon}\ln\frac{|\mathcal{C}|}{\delta}\).</p>
+<p><strong>PAC learner requirements (p.34):</strong> Polynomial sample and time complexity. <strong>Consistency model:</strong> Output any \(h \in \mathcal{C}\) consistent with the sample.</p>
+<div class="proof"><strong>Consistency / Union bound (p.35–37):</strong> Probability mass of “bad” hypotheses consistent with \(m\) samples \(\le K(1-\epsilon)^m\). Set \(K e^{-\epsilon m} \le \delta\) ⇒ \(m \ge \frac{1}{\epsilon} \ln\frac{|\mathcal{C}|}{\delta}\).</div>
+<div class="proof">
+  <strong>Naive PAC bound via “challenges”.</strong> Fix a finite concept class \(\mathcal{C}\) and a target function \(c \in \mathcal{C}\). Let a hypothesis \(h \in \mathcal{C}\) be called <em>bad</em> if its true error is larger than \(\epsilon\): \(\mathrm{err}_D(h) = \Pr_{x \sim D}[h(x) \ne c(x)] > \epsilon\). Think of each training example as a <strong>challenge</strong> to every bad hypothesis: on that example, there is at least an \(\epsilon\) chance (under the draw from \(D\)) that the bad hypothesis disagrees with the target and so is “caught.” The probability that a fixed bad hypothesis <em>escapes</em> a single challenge (agrees with \(c\) on that example) is at most \(1-\epsilon\). If we draw \(m\) i.i.d. challenges, the probability that this same bad hypothesis passes all of them (is consistent with all \(m\) samples) is at most \((1-\epsilon)^m\). Now there may be many bad hypotheses. In the worst case, every hypothesis in \(\mathcal{C}\) is bad; there are \(|\mathcal{C}|\) of them. By the union bound, the probability that <em>some</em> bad hypothesis is consistent with all \(m\) samples is at most \(|\mathcal{C}|(1-\epsilon)^m\). Using \(1-x \le e^{-x}\), we get \((1-\epsilon)^m \le e^{-\epsilon m}\), so this failure probability is \(\le |\mathcal{C}| e^{-\epsilon m}\). To make this \(\le \delta\), we require
+  \[
+    |\mathcal{C}| e^{-\epsilon m} \le \delta
+    \quad\Longrightarrow\quad
+    m \ge \frac{1}{\epsilon} \ln \frac{|\mathcal{C}|}{\delta}.
+  \]
+  Thus, with \(m \ge \frac{1}{\epsilon} \ln \frac{|\mathcal{C}|}{\delta}\) i.i.d. labeled examples, any <em>consistent</em> learner (one that only outputs hypotheses in \(\mathcal{C}\) that agree with all training examples) will, with probability at least \(1-\delta\), output a hypothesis whose true error is at most \(\epsilon\). This is the basic finite-class PAC sample complexity bound.
+</div>
+<div class="example"><strong>Infinite concept class (p.38):</strong> Axis-parallel rectangles in \(\mathbb{R}^2\).</div>
+<p><strong>Tightest Fitting Rectangle (p.39):</strong> Algorithm: take the smallest axis-aligned rectangle containing all positive examples. “Bad event” strips: four regions each with probability mass \(\epsilon/4\).</p>
+<div class="proof"><strong>Axis-parallel bound (p.40):</strong> Probability we miss a given strip is \((1-\epsilon/4)^m\). By union bound, failure probability \(\le 4(1-\epsilon/4)^m \le 4 e^{-\epsilon m/4}\). Set \(4 e^{-\epsilon m/4} \le \delta\) to get <strong>\(m \ge \frac{4}{\epsilon}\ln\frac{4}{\delta}\)</strong>.</div>
+<p><strong>Loss definitions (p.41):</strong> <strong>0/1 loss:</strong> \(\ell(h(x),y) = \mathbf{1}[h(x) \ne y]\). <strong>Empirical loss:</strong> \(\widehat{L}(h) = \frac{1}{m}\sum_i \ell(h(x_i),y_i)\). <strong>Population loss:</strong> \(L_D(h) = \mathbb{E}_{(x,y)\sim D}[\ell(h(x),y)]\).</p>
+
+<p><strong>Motivation.</strong> Move from mistake bounds on sequences to <em>generalization</em>: we draw a sample from a distribution \(D\) and want that, with high probability, our hypothesis has low error on \(D\) (not just on the sample).</p>
+
+<h3>5.1 PAC Framework</h3>
+<div class="defn">
+  <strong>Probably Approximately Correct (PAC).</strong> Goal: with probability \(\ge 1 - \delta\) over the random sample, output a hypothesis \(h\) such that \(\mathrm{err}_D(h) \le \epsilon\). We want sample complexity (number of examples) and runtime polynomial in \(1/\epsilon\), \(1/\delta\), and (for finite \(\mathcal{C}\)) \(\log|\mathcal{C}|\).
+</div>
+<div class="example"><strong>Example (p.33):</strong> 95% confidence (\(1-\delta = 0.95\)) and error \(\epsilon = 0.03\) ⇒ \(m \ge \frac{1}{\epsilon}\ln\frac{|\mathcal{C}|}{\delta}\).</div>
+<div class="defn"><strong>Consistency model (p.34):</strong> Output any \(h \in \mathcal{C}\) that agrees with the sample.</div>
+<div class="intuition">
+  <strong>Why “probably” and “approximately”?</strong> “Probably” = with confidence \(1-\delta\); we allow a small chance of failure. “Approximately” = we allow error up to \(\epsilon\); we don’t demand perfect accuracy.
+</div>
+
+<h3>5.2 Cross-Validation</h3>
+<p>Split data into \(k\) folds. For each fold, train on the other \(k-1\) folds and evaluate on that fold. Average the errors. Used to estimate true error and tune hyperparameters (e.g. \(\lambda\)).</p>
+<div class="intuition">
+  <strong>Idea.</strong> The test fold acts as a hold-out set, so its error is an unbiased estimate of generalization error (for the model trained on the rest). Averaging over folds reduces variance.
+</div>
+
+<h3>5.3 Chernoff / Hoeffding Bounds</h3>
+<p>For i.i.d. \(X_1,\ldots,X_n\) with \(X_i \in [0,1]\), let \(\mu = \mathbb{E}[\frac{1}{n}\sum_i X_i]\). <strong>Hoeffding:</strong> \(\mathbb{P}\bigl[\bigl|\frac{1}{n}\sum_i X_i - \mu\bigr| \ge \Delta\bigr] \le 2 e^{-2n\Delta^2}\).</p>
+<div class="intuition">
+  <strong>Why exponential?</strong> The probability that the sample mean deviates from \(\mu\) by \(\Delta\) decays exponentially in \(n\). So with a modest increase in sample size, we get much better concentration.
+</div>
+<div class="proof">
+  <strong>Use for hold-out.</strong> Let \(X_i = 1\) if example \(i\) is misclassified, 0 else. Then \(\mu = \mathrm{err}_D(h)\) and \(\frac{1}{n}\sum_i X_i = \widehat{\mathrm{err}}\) (empirical error). So \(\mathbb{P}[|\widehat{\mathrm{err}} - \mathrm{err}_D(h)| \ge \Delta] \le 2e^{-2n\Delta^2}\). To have this \(\le \delta\), set \(2e^{-2n\Delta^2} = \delta\), so \(n = \frac{1}{2\Delta^2} \ln\frac{2}{\delta}\). So with \(n\) hold-out examples, empirical error is within \(\Delta\) of true error with probability \(\ge 1-\delta\).
+</div>
+
+<h3>5.4 VC Dimension</h3>
+<p><strong>Uniform convergence (p.42):</strong> We want to bound \(|\widehat{\mathrm{err}}(h) - \mathrm{err}_D(h)|\) uniformly over \(h \in \mathcal{C}\). The <strong>Fundamental Theorem of Statistical Learning</strong> says that for a finite class, with probability \(\ge 1-\delta\) over the sample, every hypothesis \(h\) satisfies \(|\widehat{\mathrm{err}}(h) - \mathrm{err}_D(h)| \le \epsilon\) once the sample size is large enough (e.g. \(m = O(\frac{1}{\epsilon}\ln\frac{|\mathcal{C}|}{\delta})\) in the realizable case).</p>
+<div class="defn">
+  <strong>Geometric definitions (p.47):</strong> A set \(S \subseteq \mathbb{R}^d\) is <strong>convex</strong> if for all \(x, y \in S\) and \(\lambda \in [0,1]\), \(\lambda x + (1-\lambda)y \in S\). A <strong>convex combination</strong> of points \(x_1,\ldots,x_k\) is \(\sum_i \alpha_i x_i\) with \(\alpha_i \ge 0\) and \(\sum_i \alpha_i = 1\). The <strong>convex hull</strong> \(\mathrm{conv}(S)\) is the set of all convex combinations of points in \(S\).
+</div>
+<div class="proof">
+  <strong>Halfspaces and convexity (p.50):</strong> If \(h(x) = +1\) and \(h(y) = +1\) for a halfspace \(h(z) = \mathrm{sign}(w \cdot z + b)\), then \(w \cdot x + b \ge 0\) and \(w \cdot y + b \ge 0\). For any convex combination \(z = \lambda x + (1-\lambda)y\) with \(\lambda \in [0,1]\), \(w \cdot z + b = \lambda(w \cdot x + b) + (1-\lambda)(w \cdot y + b) \ge 0\). So \(h(z) = +1\). Thus the set of points labeled \(+1\) by a halfspace is convex; similarly for \(-1\). So halfspace labelings are convex—this is used in Radon’s argument.
+</div>
+<div class="defn">
+  A set \(S\) is <strong>shattered</strong> by \(\mathcal{C}\) if for every labeling of \(S\) (each of the \(2^{|S|}\) ways to assign 0/1 to points in \(S\)), there exists a function in \(\mathcal{C}\) that realizes that labeling. The <strong>VC dimension</strong> of \(\mathcal{C}\), \(\mathrm{VC}(\mathcal{C})\), is the maximum size of a set that can be shattered by \(\mathcal{C}\).
+</div>
+<div class="intuition">
+  <strong>Intuition.</strong> VC dimension measures the “capacity” of the class: how many points can be labeled in all possible ways? Intervals on the line can shatter 2 points but not 3 (you can’t label 3 points as + − + with one interval). So VC dimension of intervals = 2.
+</div>
+<p><strong>Examples:</strong> Intervals on \(\mathbb{R}\): VC dim 2. Axis-aligned rectangles: VC dim 4. Halfspaces in \(\mathbb{R}^n\): VC dim \(n+1\). <strong>(p.42–43)</strong> Fundamental Theorem of Statistical Learning; shattering. Set of 9 unlabeled points and labeling variation over \(\mathcal{C}\); VC-dim \(k\) = largest shattered set size. <strong>(p.44–46)</strong> Intervals (VC=2), rectangles (VC=4), triangles in the plane, 8 points and shattered triangles. <strong>(p.47–48)</strong> Convex sets and convex combinations; convex hull \(\mathrm{conv}(S)\). Halfspaces, linear thresholds, Perceptron model. <strong>(p.50–53)</strong> Halfspaces are convex separators (\(z = \lambda x + (1-\lambda)y\)). Weight vector \(w\) and bias \(b\). PAC for halfspaces in \(d\) dimensions. Solving linear inequalities in polynomial time. <strong>Agnostic learning:</strong> no assumption target is in \(\mathcal{C}\).</p>
+<p><strong>Sample complexity (finite \(\mathcal{C}\), realizable):</strong> To get \(\mathrm{err}_D(h) \le \epsilon\) with probability \(\ge 1-\delta\), it suffices to draw \(n = O\bigl(\frac{1}{\epsilon}\bigl(\ln|\mathcal{C}| + \ln\frac{1}{\delta}\bigr)\bigr)\) i.i.d. examples and output any \(h \in \mathcal{C}\) consistent with them.</p>
+<div class="proof">
+  <strong>Fundamental theorem (proof).</strong> If \(h\) has true error \(> \epsilon\), then the probability that \(h\) is consistent with one random example is \(\le 1-\epsilon\). So the probability that \(h\) is consistent with \(m\) i.i.d. examples is \(\le (1-\epsilon)^m\). Using the approximation <strong>\(1+x \le e^x\)</strong> (for all \(x\)), \((1-\epsilon)^m \le e^{-\epsilon m}\). By the union bound over all \(|\mathcal{C}|\) hypotheses, the probability that some bad hypothesis (error \(> \epsilon\)) is consistent with the sample is \(\le |\mathcal{C}| e^{-\epsilon m}\). Set this \(\le \delta\): \(|\mathcal{C}| e^{-\epsilon m} \le \delta\) \(\Rightarrow\) \(m \ge \frac{1}{\epsilon} \ln\frac{|\mathcal{C}|}{\delta}\).
+</div>
+
+<h3>5.4b Axis-Parallel Rectangles (PAC Example)</h3>
+<p><strong>Concept class:</strong> Axis-aligned rectangles in \(\mathbb{R}^2\) (or \(\mathbb{R}^d\)). <strong>Algorithm:</strong> Take the tightest-fitting rectangle that contains all positive examples. To bound error by \(\epsilon\), define four “strips” (top, bottom, left, right) such that each has probability mass \(\epsilon/4\) under \(D\). If we see at least one example in each strip, our rectangle has error \(\le \epsilon\). The probability we miss a given strip is \((1-\epsilon/4)^m\). So failure probability \(\le 4(1-\epsilon/4)^m\). Set \(4(1-\epsilon/4)^m \le \delta\) to get <strong>\(m \ge \frac{4}{\epsilon} \ln\frac{4}{\delta}\)</strong>.</p>
+
+<h3>5.4 VC Dimension (continued)</h3>
+<p><strong>Equivalent definition:</strong> \(\mathcal{C}\) shatters \(S\) iff the restriction \(|\mathcal{C}_S| = 2^{|S|}\).</p>
+
+<h3>5.4c Radon’s Theorem and VC Dimension of Halfspaces</h3>
+<p><strong>Claim:</strong> The VC dimension of halfspaces in \(\mathbb{R}^d\) is \(d+1\).</p>
+<div class="proof">
+  <strong>Radon’s Theorem.</strong> Any \(d+2\) points in \(\mathbb{R}^d\) are <em>affinely dependent</em>: there exist coefficients \(\alpha_i\) (not all zero) with \(\sum_i \alpha_i x_i = 0\) and \(\sum_i \alpha_i = 0\) (linear dependency: \((x_i,1)\) are dependent in \(\mathbb{R}^{d+1}\)). Partition indices into \(I^+ = \{i : \alpha_i \ge 0\}\) and \(I^- = \{i : \alpha_i < 0\}\). Then \(\sum_{i \in I^+} \alpha_i x_i = \sum_{j \in I^-} |\alpha_j| x_j\). Divide by \(A = \sum_{i \in I^+} \alpha_i = \sum_{j \in I^-} |\alpha_j|\); we get \(p = \sum_{i \in I^+} (\alpha_i/A) x_i = \sum_{j \in I^-} (|\alpha_j|/A) x_j\). So \(p\) is in both \(\mathrm{conv}(\{x_i : i \in I^+\})\) and \(\mathrm{conv}(\{x_j : j \in I^-\})\).<br><br>
+  <strong>Implication.</strong> If we label \(I^+\) as \(+1\) and \(I^-\) as \(-1\), any halfspace that labels all of \(I^+\) positive and all of \(I^-\) negative would have to label \(p\) (in both convex hulls) as both—impossible. So no set of \(d+2\) points is shattered. One can show \(d+1\) points can be shattered. So VC-dim of halfspaces in \(\mathbb{R}^d\) is \(d+1\).
+</div>
+
+<p><strong>Sample complexity (VC dimension):</strong> For \(\mathcal{C}\) with VC dimension \(d\), to get \(\mathrm{err}_D(h) \le \epsilon\) with probability \(\ge 1-\delta\), sample complexity is \(n = O\bigl(\frac{1}{\epsilon^2}\bigl(d \ln\frac{1}{\epsilon} + \ln\frac{1}{\delta}\bigr)\bigr)\) (agnostic/form in p.52: \(O\bigl(\frac{\mathrm{VC} + \log 1/\delta}{\epsilon^2}\bigr)\)). In the realizable case, \(O\bigl(\frac{1}{\epsilon}\bigl(d \ln\frac{1}{\epsilon} + \ln\frac{1}{\delta}\bigr)\bigr)\) suffices.</p>
+
+<p><strong>Loss definitions (p.41):</strong> <strong>0/1 loss:</strong> \(\ell(h(x),y) = \mathbf{1}[h(x) \ne y]\). <strong>Empirical loss:</strong> \(\widehat{L}(h) = \frac{1}{m}\sum_{i=1}^m \ell(h(x_i),y_i)\). <strong>Population loss:</strong> \(L_D(h) = \mathbb{E}_{(x,y)\sim D}[\ell(h(x),y)]\).</p>
+
+<h3>5.5 Loss Functions and Logistic Regression</h3>
+<p><strong>Hinge loss:</strong> \(\ell(z) = \max\{1 - z, 0\}\). Used in SVMs; penalizes margin violations.</p>
+<p><strong>Logistic loss:</strong> \(\ell(z) = \ln(1 + e^{-z})\). Smooth approximation to 0-1 loss; used in logistic regression.</p>
+<p><strong>Logistic regression:</strong> Model \(\Pr[y=1 \mid x] = \sigma(w \cdot x) = \frac{1}{1 + e^{-w \cdot x}}\). Maximizing log-likelihood is equivalent to minimizing \(-\sum_i \ln(1 + e^{-y_i w^T x_i})\). This objective is convex; optimize with gradient descent.</p>
+
+<!-- ========== Part VI: Pages 55–61 (Compression, Oracles, Domain Adaptation, TDS) ========== -->
+<h2 id="sec55">Part VI: Compression, Oracles, Domain Adaptation, TDS (Pages 55–61)</h2>
+
+<p><strong>Compression learning (p.55–56):</strong> A <strong>compression scheme</strong> is a way to represent a hypothesis by a small subset of the training set (the “compression set”). If the algorithm’s output can be reconstructed from a set of size \(O(\sqrt{m}\,d^3)\) (or similar), one can derive a PAC bound: the probability of a bad hypothesis surviving is controlled by the number of ways to choose that many examples. So we get sample complexity that depends on the compression set size rather than the full class size. This connects to Occam’s razor: simpler (compressible) hypotheses generalize better.</p>
+<p><strong>Learning from oracles (p.57–58):</strong> Instead of labeled examples, we may have access to a <strong>positive oracle</strong> \(O_+\) (returns a positive example on request) and a <strong>negative oracle</strong> \(O_-\) (returns a negative example). The goal is to find a classifier with small error relative to both oracles. Algorithms typically query both oracles and maintain a hypothesis consistent with the examples seen; the sample complexity can be analyzed similarly to PAC.</p>
+<p><strong>Domain adaptation (p.59):</strong> Training data come from a distribution \(D_{\mathrm{train}}\) and test data from \(D_{\mathrm{test}}\), which may differ. We have labeled data from the training domain and often unlabeled (or limited) data from the test domain. The question is how well we can generalize when the test distribution has shifted. Bounds typically involve a measure of discrepancy between the two distributions.</p>
+<p><strong>Discrepancy distance (p.60):</strong> The <strong>discrepancy</strong> between \(D_{\mathrm{train}}\) and \(D_{\mathrm{test}}\) measures how different they are with respect to the hypothesis class (e.g. maximum over \(h \in \mathcal{H}\) of \(|\mathrm{err}_{D_{\mathrm{train}}}(h) - \mathrm{err}_{D_{\mathrm{test}}}(h)|\)). Generalization bounds then incorporate this distance plus a term that depends on the joint error of an ideal classifier (often denoted \(\lambda\)) on both domains. So if the two distributions are close and the ideal error is small, we can still generalize.</p>
+<p><strong>TDS learning (p.61):</strong> In <strong>test-time distribution shift (TDS)</strong>, the algorithm must either <strong>Accept</strong> (and guarantee low error) when the test distribution equals the training distribution, or <strong>Reject</strong> when it has shifted. So we want a certificate: if we accept, we are confident the distribution did not shift; if it did shift, we reject. This leads to the Perceptron and margin-based analysis: the Perceptron (Rosenblatt, 1958) is one of the earliest and simplest online learners with a mistake bound under a margin assumption.</p>
+
+<!-- ========== SECTION 6 ========== -->
+<h2 id="sec4">4. The Perceptron Algorithm (Pages 62–64)</h2>
+
+<p><strong>Halfspaces with margin (p.62):</strong> Margin \(\rho\) on the unit sphere. <strong>Update rule (p.62):</strong> \(w_{\mathrm{new}} = w_{\mathrm{old}} + yx\).</p>
+<p><strong>Perceptron margin bound (p.63):</strong> \(M \le 1/\rho^2\) using Cauchy–Schwarz (see full proof below).</p>
+<p><strong>Polynomial threshold functions (p.64):</strong> Higher-order / feature expansion for non-linear boundaries. <strong>Example:</strong> To learn circles \(x^2 + y^2 \le r^2\), map \((x,y) \mapsto (x^2, y^2)\) or use a feature expansion so that a linear separator in the new space corresponds to the circle in the original space.</p>
+<p><strong>Motivation.</strong> We want an efficient, mistake-bounded algorithm for <em>halfspaces</em> (linear separators). Linear programming can find a separator in polynomial time, but the perceptron gives a very simple update with a clean mistake bound.</p>
+
+<h3>4.1 Function Class: Halfspaces</h3>
+<div class="defn">
+  \(\mathcal{C}\) is the set of halfspaces: \( f(x) = \mathrm{sign}(w \cdot x + \theta) \). For convenience we use labels \(y \in \{-1,+1\}\). We can absorb the threshold into \(w\) by adding a coordinate that is always 1: \(f(x) = \mathrm{sign}(w \cdot x)\). The vector \(w\) is unknown.
+</div>
+<p><strong>Alternative (LP):</strong> Finding a separating \(w\) from labeled examples \((x_i, y_i)\) can be written as linear inequalities \(y_i(w \cdot x_i) \ge 0\) (or \(\ge 1\) for margin). Solving this with linear programming is polynomial-time but more expensive than the simple perceptron update.</p>
+
+<h3>4.2 Algorithm</h3>
+<ul>
+  <li>Initialize \(w\) (e.g. \(\mathbf{0}\) or any unit vector).</li>
+  <li>On example \(x\): predict \(\widehat{y} = \mathrm{sign}(w \cdot x)\).</li>
+  <li>On a mistake: update \( w_{\mathrm{new}} = w_{\mathrm{old}} + y\, x \), where \(y\) is the true label. (If we predicted +1 but true was \(-1\), then \(y=-1\) so we subtract \(x\); if we predicted \(-1\) but true was \(+1\), we add \(x\).)</li>
+</ul>
+<div class="formula">
+  <strong>Unified update:</strong> on every mistake, \( w \leftarrow w + y\, x \).
+</div>
+<div class="intuition">
+  <strong>Why add \(yx\)?</strong> We want \(w \cdot x\) to have the same sign as \(y\). If we predicted +1 but \(y = -1\), then \(w \cdot x > 0\); adding \(yx = -x\) reduces \(w \cdot x\) for this \(x\) (and similar points). If we predicted -1 but \(y = +1\), then \(w \cdot x < 0\); adding \(yx = +x\) increases \(w \cdot x\). So we nudge \(w\) in the direction that would have made our prediction correct.
+</div>
+
+<h3>4.3 Margin Assumption</h3>
+<div class="defn">
+  There exists a unit-norm separator \(w^*\) (\(\|w^*\| = 1\)) and a <strong>margin</strong> \(\rho > 0\) such that for every example \((x,y)\), \( y\,(w^* \cdot x) \ge \rho \). We assume \(\|x\| \le 1\) (or \(\|x\| = 1\) for simplicity). Then every point is at distance at least \(\rho\) from the separating hyperplane \(\{ z : w^* \cdot z = 0 \}\).
+</div>
+<div class="intuition">
+  <strong>Why margin?</strong> If data are only barely separable (\(y\,(w^* \cdot x)\) close to 0), the perceptron might need many small nudges. A large \(\rho\) means data are “far” from the boundary, so each update makes more progress and we get a finite mistake bound.
+</div>
+
+<h3>4.4 Perceptron Convergence Theorem (Mistake Bound \(O(1/\rho^2)\))</h3>
+<p><strong>Theorem.</strong> Under the margin assumption (and \(\|x\| = 1\)), the perceptron makes at most \(1/\rho^2\) mistakes.</p>
+<div class="intuition">
+  <strong>Proof idea.</strong> We track two quantities: (1) \(w \cdot w^*\)—how aligned our weight is with the true separator. Each mistake increases this by at least \(\rho\). (2) \(\|w\|^2\)—how large our weight is. Each mistake increases this by at most 1. So after \(t\) mistakes we have \(w \cdot w^* \ge t\rho\) and \(\|w\|^2 \le t\). By Cauchy–Schwarz, \(w \cdot w^* \le \|w\|\). So \(t\rho \le \sqrt{t}\), hence \(t \le 1/\rho^2\).
+</div>
+<div class="proof">
+  <strong>Proof (step by step).</strong> Let \(w\) be the current weight vector and \(w^*\) the true unit vector. Consider one mistake on \((x,y)\).<br><br>
+  <strong>Claim 1:</strong> On every mistake, \(w \cdot w^*\) increases by at least \(\rho\).<br>
+  After the update, \(w' = w + yx\). So
+  \[ w' \cdot w^* = (w + yx) \cdot w^* = w \cdot w^* + y\,(x \cdot w^*). \]
+  The margin assumption says \(y\,(x \cdot w^*) \ge \rho\). So \(w' \cdot w^* \ge w \cdot w^* + \rho\). So each mistake adds at least \(\rho\) to the alignment with \(w^*\). After \(t\) mistakes, \(w \cdot w^* \ge t\rho\) (assuming we start from 0 or positive).<br><br>
+  <strong>Claim 2:</strong> On every mistake, \(\|w\|^2\) increases by at most 1.<br>
+  \[ \|w'\|^2 = \|w + yx\|^2 = \|w\|^2 + 2y\,(w \cdot x) + y^2\|x\|^2. \]
+  We had a mistake, so our prediction \(\mathrm{sign}(w \cdot x)\) was wrong. So \(y\) and \(w \cdot x\) have opposite signs, i.e. \(y\,(w \cdot x) \le 0\). Also \(y^2 = 1\) and \(\|x\|^2 = 1\). So
+  \[ \|w'\|^2 \le \|w\|^2 + 0 + 1 = \|w\|^2 + 1. \]
+  After \(t\) mistakes, \(\|w\|^2 \le t\), so \(\|w\| \le \sqrt{t}\).<br><br>
+  <strong>Synthesis.</strong> After \(t\) mistakes we have \(w \cdot w^* \ge t\rho\) and \(\|w\| \le \sqrt{t}\). By the Cauchy–Schwarz inequality, \(w \cdot w^* \le \|w\|\,\|w^*\| = \|w\| \cdot 1 = \|w\|\). So
+  \[ t\rho \le w \cdot w^* \le \|w\| \le \sqrt{t}. \]
+  Thus \(t\rho \le \sqrt{t}\). Dividing by \(\sqrt{t}\): \(\rho\sqrt{t} \le 1\), so \(\sqrt{t} \le 1/\rho\), hence \(t \le 1/\rho^2\). So the number of mistakes is at most \(1/\rho^2\).
+</div>
+<p><strong>Note.</strong> The bound is dimension-independent. If \(\rho\) is very small (e.g. exponentially small in dimension), the bound can be large. If \(\rho\) is constant or inverse polynomial, we get a polynomial mistake bound.</p>
+
+<h3>4.5 Kernel Perceptron</h3>
+<p>To learn non-linear boundaries, map \(x \mapsto \phi(x)\) into a high-dimensional feature space and run perceptron in that space. The weight vector is then a linear combination of the mistaken examples: \(w = \sum_j \alpha_j y_j \phi(x_j)\), so predictions are \(\mathrm{sign}\bigl(\sum_j \alpha_j y_j \,\phi(x_j) \cdot \phi(x)\bigr)\). The update only needs inner products \(\phi(x) \cdot \phi(z)\). A <strong>kernel</strong> \(K(x,z) = \phi(x) \cdot \phi(z)\) computes this without explicitly constructing \(\phi\). Example: \(K(x,z) = (x \cdot z)^2\) corresponds to a quadratic feature map; we get polynomial boundaries with cost in the original dimension.</p>
+<div class="intuition">
+  <strong>Kernel trick.</strong> We never need to store or compute \(\phi(x)\); we only need \(K(x,z)\). For polynomial kernels \(K(x,z) = (x \cdot z)^d\), the implicit \(\phi\) has dimension \(O(n^d)\), but \(K(x,z)\) is computed in \(O(n)\) time.
+</div>
+
+<!-- ========== SECTION 5 ========== -->
+<h2 id="sec2reg">2. Linear Regression and Regularization (Pages 65–74)</h2>
+
+<p><strong>Feature expansion (p.65):</strong> \(x \to z\). <strong>Linear regression:</strong> Minimize squared loss \(\sum_i (f(x_i) - y_i)^2 = \|Xw - y\|^2\).</p>
+<p><strong>Optimal function (p.66):</strong> The optimal predictor under squared loss is the <strong>conditional mean</strong> \(f^*(x) = \mathbb{E}[y \mid x]\).</p>
+<p><strong>Simple linear regression (p.67):</strong> Model \(y = \beta_0 + \beta_1 x\). Set partial derivatives of \(\sum_i (y_i - \beta_0 - \beta_1 x_i)^2\) to zero. One obtains <strong>\(\beta_1 = \frac{\mathrm{cov}(x,y)}{\mathrm{var}(x)}\)</strong> and \(\beta_0 = \bar{y} - \beta_1 \bar{x}\).</p>
+<p><strong>Normal equations (p.68):</strong> \(X^T X w = X^T y\) from the condition that the <strong>residual \(y - Xw\) is orthogonal to the column space of \(X\)</strong> (i.e. \(X^T(y - Xw) = 0\)). Geometrically: we project \(y\) onto \(\mathrm{Span}(X)\); the residual is perpendicular to every column of \(X\).</p>
+<p><strong>MLE under Gaussian noise (p.69–70):</strong> Assume \(y_i = w^T x_i + \epsilon_i\) with \(\epsilon_i \sim N(0, \sigma^2)\) i.i.d. Then the log-likelihood of the data is \(-\frac{1}{2\sigma^2}\sum_i (y_i - w^T x_i)^2 + \mathrm{const}\). <strong>Maximizing log-likelihood is equivalent to minimizing squared loss (OLS).</strong></p>
+<p><strong>Ridge regression (p.70):</strong> Objective \(\|Xw - y\|^2 + \lambda \|w\|^2\).</p>
+<p><strong>Bias–variance (p.71–72):</strong> Decomposition \(\mathrm{MSE} = \mathrm{Var}(\hat{a}) + \mathrm{Bias}(\hat{a})^2\); optimal \(\lambda^* = \sigma^2/(a^*)^2\). Plot: variance high at \(\lambda=0\), bias² high at \(\lambda \to \infty\). <strong>Kernel (p.73):</strong> <strong>Kernel function</strong> \(K(x^1, x^2)\) is an inner product in an expanded feature space: \(K(x^1, x^2) = \phi(x^1) \cdot \phi(x^2)\). <strong>Kernel trick (p.74):</strong> The weight vector in the feature space can be written as <strong>\(w = \sum_i \alpha_i \phi(x_i)\)</strong> (weighted sum of training instance mappings); predictions use \(\mathrm{sign}\bigl(\sum_i \alpha_i y_i K(x_i, x)\bigr)\) without explicitly computing \(\phi\).</p>
+
+<p><strong>Motivation.</strong> OLS minimizes \(\|Xw - y\|^2\). The closed-form \(w = (X^T X)^{-1} X^T y\) requires \(X^T X\) invertible. Large weights can overfit; regularization penalizes them.</p>
+
+<h3>2.0 Ordinary Least Squares (OLS)</h3>
+<p>Minimize \(\|Xw - y\|^2 = \sum_i (x_i^T w - y_i)^2\). Taking the gradient with respect to \(w\):</p>
+<div class="formula">
+  \[ \nabla_w \|Xw - y\|^2 = 2X^T(Xw - y). \]
+</div>
+<p>Setting to zero gives the <strong>normal equations</strong> \(X^T X w = X^T y\). If \(X^T X\) is invertible, \(w = (X^T X)^{-1} X^T y\). If not (e.g. \(n < d\) or collinearity), the solution is not unique or we use Ridge.</p>
+<div class="intuition">
+  <strong>Why the normal equations?</strong> We are projecting \(y\) onto the column space of \(X\). The residual \(Xw - y\) must be orthogonal to every column of \(X\), i.e. \(X^T(Xw - y) = 0\). That is exactly \(X^T X w = X^T y\).
+</div>
+
+<h3>2.1 Ridge Regression (L2)</h3>
+<p><strong>Objective:</strong> \(\min_w \|Xw - y\|^2 + \lambda \|w\|^2\). The second term penalizes large weights. Taking the derivative in \(w\):</p>
+<div class="formula">
+  \[ \nabla_w \bigl( \|Xw - y\|^2 + \lambda \|w\|^2 \bigr) = 2X^T(Xw - y) + 2\lambda w. \]
+</div>
+<p>Setting to zero: \(X^T(Xw - y) + \lambda w = 0\), so \(X^T X w + \lambda I w = X^T y\).</p>
+<div class="defn">
+  <strong>Closed form:</strong> \( w = (X^T X + \lambda I)^{-1} X^T y. \)
+  Adding \(\lambda I\) (\(\lambda > 0\)) makes all eigenvalues strictly positive (if \(\lambda_i\) are eigenvalues of \(X^T X\), then \(X^T X + \lambda I\) has eigenvalues \(\lambda_i + \lambda > 0\)). So \(X^T X + \lambda I\) is always invertible even when \(X^T X\) is singular.
+</div>
+<div class="intuition">
+  <strong>Why Ridge helps.</strong> When \(X^T X\) is nearly singular, small changes in \(y\) can cause huge changes in \(w\). Adding \(\lambda I\) stabilizes the inverse and shrinks \(w\) toward zero, trading bias for lower variance.
+</div>
+
+<h3>2.2 Lasso (L1)</h3>
+<p>Minimize \(\|Xw - y\|^2 + \lambda \|w\|_1\). The L1 penalty \(\|w\|_1 = \sum_j |w_j|\) drives many coefficients to <em>exactly</em> zero (sparse solutions). No closed form; optimize with (sub)gradient or coordinate descent.</p>
+<div class="intuition">
+  <strong>Why sparsity?</strong> The L1 ball has “corners” on the axes; when the level sets of the loss hit such a corner, some \(w_j\) become exactly 0. L2 (Ridge) gives a smooth ball, so weights shrink but rarely hit zero exactly.
+</div>
+
+<h3>2.3 Bias–Variance Decomposition</h3>
+<p>For an estimator \(\hat{a}\) of a quantity \(a\), expand \(\mathbb{E}[(\hat{a} - a)^2]\):</p>
+<div class="proof">
+  <strong>Derivation.</strong> Write \(\hat{a} - a = (\hat{a} - \mathbb{E}[\hat{a}]) + (\mathbb{E}[\hat{a}] - a)\). Then
+  \[ (\hat{a} - a)^2 = (\hat{a} - \mathbb{E}[\hat{a}])^2 + (\mathbb{E}[\hat{a}] - a)^2 + 2(\hat{a} - \mathbb{E}[\hat{a}])(\mathbb{E}[\hat{a}] - a). \]
+  Taking expectation: the cross term vanishes because \(\mathbb{E}[\hat{a} - \mathbb{E}[\hat{a}]] = 0\). So
+  \[ \mathrm{MSE}(\hat{a}) = \mathbb{E}[(\hat{a} - a)^2] = \mathrm{Var}(\hat{a}) + \bigl(\mathbb{E}[\hat{a}] - a\bigr)^2 = \mathrm{Var}(\hat{a}) + \mathrm{Bias}(\hat{a})^2. \]
+</div>
+<p>OLS (\(\lambda = 0\)): unbiased, possibly high variance. Ridge/Lasso (\(\lambda > 0\)): bias toward zero, lower variance. Optimal \(\lambda\) minimizes MSE.</p>
+<div class="intuition">
+  <strong>Tradeoff.</strong> As \(\lambda\) increases, the estimator is pulled toward zero (bias increases) but becomes less sensitive to the sample (variance decreases). The best \(\lambda\) balances the two.
+</div>
+
+<p><strong>Ridge bias–variance (parametric form):</strong> Under a Bayesian-style model with true parameter \(a^*\) and noise variance \(\sigma^2\), the Ridge estimator has MSE of the form \(\frac{m\beta\sigma^2}{(\lambda + m\beta)^2} + \frac{\lambda^2 (a^*)^2}{(\lambda + m\beta)^2}\) (variance + bias²). The <strong>optimal \(\lambda^* = \sigma^2 / (a^*)^2</strong> minimizes this (balance variance and bias).</p>
+
+<!-- ========== SECTION 3 ========== -->
+<!-- ========== SECTION 4 ========== -->
+<h2 id="sec7">Part IX: Optimization &amp; Loss (Pages 75–84)</h2>
+<p>Training ML models means minimizing a loss over parameters. <strong>Gradient descent (p.75–77)</strong> uses the first-order approximation \(f(w+d) \approx f(w) + \nabla f(w)^T d\) and updates \(w \leftarrow w - \eta \nabla f(w)\) so we move in the direction of steepest decrease. For <strong>convex</strong> \(f\) (chord above graph: \(f(ax_1+(1-a)x_2) \le a f(x_1)+(1-a)f(x_2)\)), any local minimum is global. Equivalently, \(f(\text{midpoint}) \le \text{average of } f(\text{endpoints})\). <strong>GD algorithm (p.77):</strong> Init \(w\) → Compute \(\nabla f(w)\) → Update \(w_{\mathrm{new}} = w_{\mathrm{old}} - \eta \nabla f(w)\); repeat. Taylor expansion justifies the linear approximation; we choose step size \(\eta\) and a stopping condition (e.g. \(\|\nabla f(w)\|\) small).</p>
+<p><strong>SGD (p.78):</strong> When \(f = \frac{1}{m}\sum_i f_i\), we update using one random example’s gradient; \(\mathbb{E}[\text{update}] = \text{full gradient}\). <strong>Subgradient (p.79)</strong> for non-differentiable losses (e.g. hinge): a vector \(v\) with \(f(w') \ge f(w) + v^T(w'-w)\).</p>
+<div class="defn"><strong>\(L\)-smooth (p.80):</strong> \(\|\nabla f(x)-\nabla f(y)\| \le L\|x-y\|\). The gradient does not change too fast.</div>
+<div class="proof"><strong>Descent Lemma:</strong> With \(\eta = 1/L\), \(f(x_{k+1}) \le f(x_k) - \frac{1}{2L}\|\nabla f(x_k)\|^2\). So each step decreases \(f\) by at least \(\frac{1}{2L}\|\nabla f(x_k)\|^2\). Summing over \(T\) steps: \(\sum_{k=1}^T \|\nabla f(x_k)\|^2 \le 2L(f(x_1)-f(x^*))\), hence <strong>\(1/T\) rate (p.81):</strong> \(\min_j \|\nabla f(x_j)\|^2 \le \frac{2L(f(x_1)-f(x^*))}{T}\). So \(O(1/\epsilon)\) iterations suffice for an \(\epsilon\)-approximate stationary point.</div>
+<p><strong>Losses (p.82):</strong> Detailed comparison: <strong>0/1 (classification):</strong> \(\ell(z) = \mathbf{1}[z \le 0]\) (non-convex, non-smooth). <strong>Square:</strong> \(\ell(z) = (1-z)^2\) (smooth, convex). <strong>Hinge:</strong> \(\ell(z) = \max\{1-z, 0\}\) (SVMs; convex, non-differentiable at 1). <strong>Logistic:</strong> \(\ell(z) = \ln(1 + e^{-z})\) (smooth, convex).</p>
+<p><strong>Logistic regression (p.83–84):</strong> <strong>Sigmoid</strong> \(\sigma(t) = \frac{1}{1 + e^{-t}}\). Model \(\Pr[y=1|x] = \sigma(w\cdot x)\). Log-likelihood \(-\sum_i \ln(1+e^{-y_i w^T x_i})\) is <strong>convex in \(w\)</strong>: the Hessian is positive semi-definite (each term has the form of a logistic loss with a positive curvature factor), so GD finds the global minimum. Maximum likelihood for the logistic model thus reduces to convex optimization.</p>
+
+<hr>
+<p><em>End of review. Ordered by Scribble Together pages 1–84. Every algorithm, proof, and key example from the handwritten notes is included or summarized. Open in a browser to render math.</em></p>
+
+</body>
+</html>
