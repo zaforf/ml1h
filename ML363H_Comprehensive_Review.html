@@ -328,7 +328,11 @@ So we “add 1” only when both subtrees have the same rank (a kind of symmetry
 </div>
 
 <h3>5.4 VC Dimension</h3>
-<p><strong>Uniform convergence (p.42):</strong> We want to bound \(|\widehat{\mathrm{err}}(h) - \mathrm{err}_D(h)|\) uniformly over \(h \in \mathcal{C}\). The <strong>Fundamental Theorem of Statistical Learning</strong> says that for a finite class, with probability \(\ge 1-\delta\) over the sample, every hypothesis \(h\) satisfies \(|\widehat{\mathrm{err}}(h) - \mathrm{err}_D(h)| \le \epsilon\) once the sample size is large enough (e.g. \(m = O(\frac{1}{\epsilon}\ln\frac{|\mathcal{C}|}{\delta})\) in the realizable case).</p>
+<p><strong>Big picture (p.42):</strong> VC dimension \(d = \mathrm{VC}(\mathcal{C})\) measures how rich the class is (how many points it can shatter). In the <em>realizable</em> setting, with a <strong>consistent learner</strong> that always returns some \(h \in \mathcal{C}\) fitting the sample, the <strong>Fundamental Theorem of Statistical Learning</strong> says that, with probability at least \(1-\delta\) over the random sample, we have \(\mathrm{err}_D(h) \le \epsilon\) as soon as
+\[
+m = O\!\left(\frac{d + \log(1/\delta)}{\epsilon}\right).
+\]
+So more complex classes (larger \(d\)) or smaller \(\epsilon\) both require more data; this matches the form written in the lecture notes.</p>
 <div class="defn">
   <strong>Geometric definitions (p.47):</strong> A set \(S \subseteq \mathbb{R}^d\) is <strong>convex</strong> if for all \(x, y \in S\) and \(\lambda \in [0,1]\), \(\lambda x + (1-\lambda)y \in S\). A <strong>convex combination</strong> of points \(x_1,\ldots,x_k\) is \(\sum_i \alpha_i x_i\) with \(\alpha_i \ge 0\) and \(\sum_i \alpha_i = 1\). The <strong>convex hull</strong> \(\mathrm{conv}(S)\) is the set of all convex combinations of points in \(S\).
 </div>
@@ -342,7 +346,6 @@ So we “add 1” only when both subtrees have the same rank (a kind of symmetry
   <strong>Intuition.</strong> VC dimension measures the “capacity” of the class: how many points can be labeled in all possible ways? Intervals on the line can shatter 2 points but not 3 (you can’t label 3 points as + − + with one interval). So VC dimension of intervals = 2.
 </div>
 <p><strong>Examples:</strong> Intervals on \(\mathbb{R}\): VC dim 2. Axis-aligned rectangles: VC dim 4. Halfspaces in \(\mathbb{R}^n\): VC dim \(n+1\). <strong>(p.42–43)</strong> Fundamental Theorem of Statistical Learning; shattering. Set of 9 unlabeled points and labeling variation over \(\mathcal{C}\); VC-dim \(k\) = largest shattered set size. <strong>(p.44–46)</strong> Intervals (VC=2), rectangles (VC=4), triangles in the plane, 8 points and shattered triangles. <strong>(p.47–48)</strong> Convex sets and convex combinations; convex hull \(\mathrm{conv}(S)\). Halfspaces, linear thresholds, Perceptron model. <strong>(p.50–53)</strong> Halfspaces are convex separators (\(z = \lambda x + (1-\lambda)y\)). Weight vector \(w\) and bias \(b\). PAC for halfspaces in \(d\) dimensions. Solving linear inequalities in polynomial time. <strong>Agnostic learning:</strong> no assumption target is in \(\mathcal{C}\).</p>
-<p><strong>Sample complexity (finite \(\mathcal{C}\), realizable):</strong> To get \(\mathrm{err}_D(h) \le \epsilon\) with probability \(\ge 1-\delta\), it suffices to draw \(n = O\bigl(\frac{1}{\epsilon}\bigl(\ln|\mathcal{C}| + \ln\frac{1}{\delta}\bigr)\bigr)\) i.i.d. examples and output any \(h \in \mathcal{C}\) consistent with them.</p>
 <div class="proof">
   <strong>Fundamental theorem (proof).</strong> If \(h\) has true error \(> \epsilon\), then the probability that \(h\) is consistent with one random example is \(\le 1-\epsilon\). So the probability that \(h\) is consistent with \(m\) i.i.d. examples is \(\le (1-\epsilon)^m\). Using the approximation <strong>\(1+x \le e^x\)</strong> (for all \(x\)), \((1-\epsilon)^m \le e^{-\epsilon m}\). By the union bound over all \(|\mathcal{C}|\) hypotheses, the probability that some bad hypothesis (error \(> \epsilon\)) is consistent with the sample is \(\le |\mathcal{C}| e^{-\epsilon m}\). Set this \(\le \delta\): \(|\mathcal{C}| e^{-\epsilon m} \le \delta\) \(\Rightarrow\) \(m \ge \frac{1}{\epsilon} \ln\frac{|\mathcal{C}|}{\delta}\).
 </div>
@@ -374,9 +377,59 @@ So we “add 1” only when both subtrees have the same rank (a kind of symmetry
 
 <p><strong>Compression learning (p.55–56):</strong> A <strong>compression scheme</strong> is a way to represent a hypothesis by a small subset of the training set (the “compression set”). If the algorithm’s output can be reconstructed from a set of size \(O(\sqrt{m}\,d^3)\) (or similar), one can derive a PAC bound: the probability of a bad hypothesis surviving is controlled by the number of ways to choose that many examples. So we get sample complexity that depends on the compression set size rather than the full class size. This connects to Occam’s razor: simpler (compressible) hypotheses generalize better.</p>
 <p><strong>Learning from oracles (p.57–58):</strong> Instead of labeled examples, we may have access to a <strong>positive oracle</strong> \(O_+\) (returns a positive example on request) and a <strong>negative oracle</strong> \(O_-\) (returns a negative example). The goal is to find a classifier with small error relative to both oracles. Algorithms typically query both oracles and maintain a hypothesis consistent with the examples seen; the sample complexity can be analyzed similarly to PAC.</p>
-<p><strong>Domain adaptation (p.59):</strong> Training data come from a distribution \(D_{\mathrm{train}}\) and test data from \(D_{\mathrm{test}}\), which may differ. We have labeled data from the training domain and often unlabeled (or limited) data from the test domain. The question is how well we can generalize when the test distribution has shifted. Bounds typically involve a measure of discrepancy between the two distributions.</p>
-<p><strong>Discrepancy distance (p.60):</strong> The <strong>discrepancy</strong> between \(D_{\mathrm{train}}\) and \(D_{\mathrm{test}}\) measures how different they are with respect to the hypothesis class (e.g. maximum over \(h \in \mathcal{H}\) of \(|\mathrm{err}_{D_{\mathrm{train}}}(h) - \mathrm{err}_{D_{\mathrm{test}}}(h)|\)). Generalization bounds then incorporate this distance plus a term that depends on the joint error of an ideal classifier (often denoted \(\lambda\)) on both domains. So if the two distributions are close and the ideal error is small, we can still generalize.</p>
-<p><strong>TDS learning (p.61):</strong> In <strong>test-time distribution shift (TDS)</strong>, the algorithm must either <strong>Accept</strong> (and guarantee low error) when the test distribution equals the training distribution, or <strong>Reject</strong> when it has shifted. So we want a certificate: if we accept, we are confident the distribution did not shift; if it did shift, we reject. This leads to the Perceptron and margin-based analysis: the Perceptron (Rosenblatt, 1958) is one of the earliest and simplest online learners with a mistake bound under a margin assumption.</p>
+
+<h3>6.1 Domain Adaptation and the Joint Error (Page 59)</h3>
+<p><strong>The problem of shift.</strong> Standard PAC learning assumes the training and test distributions are the same. <strong>Domain adaptation</strong> addresses the case where they differ: the learner receives a <strong>labeled</strong> training set from \(D_{\mathrm{train}}\) and an <strong>unlabeled</strong> (or partially labeled) test set from \(D_{\mathrm{test}}\). The question is how well we can perform on \(D_{\mathrm{test}}\) when we only have labels from \(D_{\mathrm{train}}\).</p>
+<p><strong>The joint error (\(\lambda\)).</strong> A fundamental limit of learning under shift is the <strong>joint error</strong>: the minimum combined error that any single concept in the class can achieve on both distributions:
+\[
+\lambda = \min_{c \in \mathcal{C}} \;\bigl( \mathrm{err}_{D_{\mathrm{train}}}(c) + \mathrm{err}_{D_{\mathrm{test}}}(c) \bigr).
+\]
+If \(\lambda\) is large, no single function in \(\mathcal{C}\) can do well on both domains at once—there is an inherent tension between fitting the training domain and the test domain. If \(\lambda = 0\), a perfect classifier exists for both; that special case is often called <strong>covariate shift</strong> (only the input distribution changes, not the conditional label distribution).</p>
+
+<h3>6.2 Generalization Bounds and Discrepancy (Page 60)</h3>
+<p><strong>Generalization bound under shift.</strong> The error on the test distribution can be bounded in terms of the training error, the joint error \(\lambda\), and a measure of how far the two distributions are:
+\[
+\mathrm{err}_{D_{\mathrm{test}}}(h) \le \mathrm{err}_{D_{\mathrm{train}}}(h) + \lambda + \mathrm{dist}(D_{\mathrm{train}}, D_{\mathrm{test}}).
+\]
+So if we fit the training set well and the distributions are close (and \(\lambda\) is small), we can still hope for good test performance.</p>
+<p><strong>Discrepancy distance.</strong> The <strong>discrepancy</strong> is a distance between \(D_{\mathrm{train}}\) and \(D_{\mathrm{test}}\) that is tailored to the concept class \(\mathcal{C}\). It measures the maximum difference, over pairs of concepts in \(\mathcal{C}\), in the probability that they disagree on a random example:
+\[
+\mathrm{disc}(D, D') = \sup_{f_1, f_2 \in \mathcal{C}} \;\Bigl| \Pr_{x \sim D}[f_1(x) \neq f_2(x)] - \Pr_{x \sim D'}[f_1(x) \neq f_2(x)] \Bigr|.
+\]
+So we compare how often \(f_1\) and \(f_2\) disagree under \(D\) versus under \(D'\). If this is small, the two distributions “look similar” to the class \(\mathcal{C}\). When \(\lambda = 0\) (a perfect joint classifier exists), the setting is often referred to as <strong>covariate shift</strong>.</p>
+<div class="proof">
+  <strong>Proof of the generalization bound under shift.</strong> We show \(\mathrm{err}_{D_{\mathrm{test}}}(h) \le \mathrm{err}_{D_{\mathrm{train}}}(h) + \lambda + \mathrm{disc}(D_{\mathrm{train}}, D_{\mathrm{test}})\).<br><br>
+  <strong>Step 1 — Use the best \(c\) to bound test error.</strong> For any \(h\) and any \(c \in \mathcal{C}\), the triangle inequality for 0-1 loss gives \(\mathbf{1}[h(x) \neq y] \le \mathbf{1}[h(x) \neq c(x)] + \mathbf{1}[c(x) \neq y]\). Taking expectation over \(D_{\mathrm{test}}\):
+  \[
+  \mathrm{err}_{D_{\mathrm{test}}}(h) = \mathbb{E}_{D_{\mathrm{test}}}[\mathbf{1}[h \neq y]] \le \Pr_{D_{\mathrm{test}}}[h \neq c] + \mathrm{err}_{D_{\mathrm{test}}}(c).
+  \]
+  So for every \(c \in \mathcal{C}\), \(\mathrm{err}_{D_{\mathrm{test}}}(h) \le \Pr_{D_{\mathrm{test}}}[h \neq c] + \mathrm{err}_{D_{\mathrm{test}}}(c)\). We choose \(c = c^*\) that minimizes \(\mathrm{err}_{D_{\mathrm{train}}}(c) + \mathrm{err}_{D_{\mathrm{test}}}(c)\), so \(\lambda = \mathrm{err}_{D_{\mathrm{train}}}(c^*) + \mathrm{err}_{D_{\mathrm{test}}}(c^*)\).<br><br>
+  <strong>Step 2 — Add and subtract the train error.</strong> Write the test-side disagreement as train disagreement plus the difference:
+  \[
+  \Pr_{D_{\mathrm{test}}}[h \neq c^*] = \Pr_{D_{\mathrm{train}}}[h \neq c^*] + \Bigl( \Pr_{D_{\mathrm{test}}}[h \neq c^*] - \Pr_{D_{\mathrm{train}}}[h \neq c^*] \Bigr).
+  \]
+  The term in parentheses is bounded by the discrepancy: \(\bigl| \Pr_{D_{\mathrm{test}}}[h \neq c^*] - \Pr_{D_{\mathrm{train}}}[h \neq c^*] \bigr| \le \mathrm{disc}(D_{\mathrm{train}}, D_{\mathrm{test}})\).<br><br>
+  <strong>Step 3 — Relate train disagreement to training loss.</strong> On the training distribution, \(\mathbf{1}[h(x) \neq c^*(x)] \le \mathbf{1}[h(x) \neq y] + \mathbf{1}[c^*(x) \neq y]\), so
+  \[
+  \Pr_{D_{\mathrm{train}}}[h \neq c^*] \le \mathrm{err}_{D_{\mathrm{train}}}(h) + \mathrm{err}_{D_{\mathrm{train}}}(c^*).
+  \]
+  <strong>Step 4 — Rearrange.</strong> Putting it together:
+  \[
+  \mathrm{err}_{D_{\mathrm{test}}}(h) \le \Pr_{D_{\mathrm{test}}}[h \neq c^*] + \mathrm{err}_{D_{\mathrm{test}}}(c^*)
+  \]
+  \[
+  \le \Pr_{D_{\mathrm{train}}}[h \neq c^*] + \mathrm{disc}(D_{\mathrm{train}}, D_{\mathrm{test}}) + \mathrm{err}_{D_{\mathrm{test}}}(c^*)
+  \]
+  \[
+  \le \mathrm{err}_{D_{\mathrm{train}}}(h) + \mathrm{err}_{D_{\mathrm{train}}}(c^*) + \mathrm{err}_{D_{\mathrm{test}}}(c^*) + \mathrm{disc}(D_{\mathrm{train}}, D_{\mathrm{test}}) = \mathrm{err}_{D_{\mathrm{train}}}(h) + \lambda + \mathrm{disc}(D_{\mathrm{train}}, D_{\mathrm{test}}).
+  \]
+  So test error is bounded by <strong>training error</strong> plus the joint error \(\lambda\) plus the discrepancy.
+</div>
+
+<h3>6.3 TDS Learning and the Perceptron (Page 61)</h3>
+<p><strong>Testable learning with distribution shift (TDS).</strong> In the <strong>TDS</strong> model, the learner can <strong>certify</strong> its performance. The algorithm receives labeled training data from the training domain and unlabeled data from the test domain. It must either <strong>ACCEPT</strong>—and then guarantee low error on the test distribution—or <strong>REJECT</strong> when the shift is too large to certify (e.g. when certification would be impossible or unreliable). So we get a testable guarantee: if the algorithm accepts, we have a bound on test error; if it rejects, we know not to trust the model under the observed shift.</p>
+<p><strong>Error proof logic.</strong> A typical proof uses the triangle inequality to decompose test error. For a hypothesis \(h\), the test error can be written as the sum of (1) the disagreement between \(h\) and the best-fitting function \(c^* \in \mathcal{C}\) on the test distribution, and (2) that function’s own error on the test distribution (which is at most \(\lambda\) when we use the minimizer defining \(\lambda\)). So \(\mathrm{err}_{D_{\mathrm{test}}}(h)\) is bounded by the disagreement with the best \(c \in \mathcal{C}\) plus \(\lambda\). If we can control the disagreement (e.g. via unlabeled test data and the discrepancy), we can certify that test error is low; otherwise we reject.</p>
+<p><strong>Bridge to the Perceptron.</strong> The notes then connect to practical algorithms for learning halfspaces. The <strong>Perceptron (Rosenblatt, 1958)</strong> is an online algorithm that learns a linear separator. Under a <strong>margin</strong> assumption (there exists a unit vector \(w^*\) such that \(y\,(w^* \cdot x) \ge \rho\) for all examples), the Perceptron’s mistakes are bounded by \(1/\rho^2\). So we move from the statistical setting (domain adaptation, discrepancy, TDS) to the mistake-bounded setting: the Perceptron provides a concrete learner with a clean guarantee when data are separable with margin \(\rho\).
 
 <!-- ========== SECTION 6 ========== -->
 <h2 id="sec4">4. The Perceptron Algorithm (Pages 62–64)</h2>
@@ -444,17 +497,29 @@ So we “add 1” only when both subtrees have the same rank (a kind of symmetry
 <!-- ========== SECTION 5 ========== -->
 <h2 id="sec2reg">2. Linear Regression and Regularization (Pages 65–74)</h2>
 
-<p><strong>Feature expansion (p.65):</strong> \(x \to z\). <strong>Linear regression:</strong> Minimize squared loss \(\sum_i (f(x_i) - y_i)^2 = \|Xw - y\|^2\).</p>
-<p><strong>Optimal function (p.66):</strong> The optimal predictor under squared loss is the <strong>conditional mean</strong> \(f^*(x) = \mathbb{E}[y \mid x]\).</p>
-<p><strong>Simple linear regression (p.67):</strong> Model \(y = \beta_0 + \beta_1 x\). Set partial derivatives of \(\sum_i (y_i - \beta_0 - \beta_1 x_i)^2\) to zero. One obtains <strong>\(\beta_1 = \frac{\mathrm{cov}(x,y)}{\mathrm{var}(x)}\)</strong> and \(\beta_0 = \bar{y} - \beta_1 \bar{x}\).</p>
-<p><strong>Normal equations (p.68):</strong> \(X^T X w = X^T y\) from the condition that the <strong>residual \(y - Xw\) is orthogonal to the column space of \(X\)</strong> (i.e. \(X^T(y - Xw) = 0\)). Geometrically: we project \(y\) onto \(\mathrm{Span}(X)\); the residual is perpendicular to every column of \(X\).</p>
-<p><strong>MLE under Gaussian noise (p.69–70):</strong> Assume \(y_i = w^T x_i + \epsilon_i\) with \(\epsilon_i \sim N(0, \sigma^2)\) i.i.d. Then the log-likelihood of the data is \(-\frac{1}{2\sigma^2}\sum_i (y_i - w^T x_i)^2 + \mathrm{const}\). <strong>Maximizing log-likelihood is equivalent to minimizing squared loss (OLS).</strong></p>
-<p><strong>Ridge regression (p.70):</strong> Objective \(\|Xw - y\|^2 + \lambda \|w\|^2\).</p>
-<p><strong>Bias–variance (p.71–72):</strong> Decomposition \(\mathrm{MSE} = \mathrm{Var}(\hat{a}) + \mathrm{Bias}(\hat{a})^2\); optimal \(\lambda^* = \sigma^2/(a^*)^2\). Plot: variance high at \(\lambda=0\), bias² high at \(\lambda \to \infty\). <strong>Kernel (p.73):</strong> <strong>Kernel function</strong> \(K(x^1, x^2)\) is an inner product in an expanded feature space: \(K(x^1, x^2) = \phi(x^1) \cdot \phi(x^2)\). <strong>Kernel trick (p.74):</strong> The weight vector in the feature space can be written as <strong>\(w = \sum_i \alpha_i \phi(x_i)\)</strong> (weighted sum of training instance mappings); predictions use \(\mathrm{sign}\bigl(\sum_i \alpha_i y_i K(x_i, x)\bigr)\) without explicitly computing \(\phi\).</p>
+<p><strong>Motivation.</strong> In supervised regression we observe pairs \((x^1, y^1), \ldots, (x^m, y^m)\) and want to fit a function \(f(x)\) so that predictions \(f(x^i)\) are close to the labels \(y^i\). The standard approach is to minimize squared error; we then add regularization to control overfitting and study how that affects bias and variance.</p>
 
-<p><strong>Motivation.</strong> OLS minimizes \(\|Xw - y\|^2\). The closed-form \(w = (X^T X)^{-1} X^T y\) requires \(X^T X\) invertible. Large weights can overfit; regularization penalizes them.</p>
+<h3>2.0 Linear Regression Foundations (Pages 65–67)</h3>
+<p><strong>Objective.</strong> We choose \(f\) to minimize the mean squared error on the data:
+\[
+\frac{1}{m} \sum_{i=1}^{m} \bigl(f(x^i) - y^i\bigr)^2.
+\]
+When we restrict to linear functions \(f(x) = w^T x\) (or \(f(x) = \beta_0 + \beta_1 x\) in one dimension), this becomes a minimization over the weight vector \(w\).</p>
+<p><strong>Optimal function in principle.</strong> The function that minimizes mean squared error over all (not necessarily linear) predictors is the <strong>conditional mean</strong>: \(f^*(x) = \mathbb{E}[y \mid x]\). Linear regression is the best <em>linear</em> approximation to this when we work in the space of linear functions.</p>
+<p><strong>Simple linear regression (scalar \(x\)).</strong> Take \(f(x) = \beta_0 + \beta_1 x\). Setting the partial derivatives of \(\sum_i (y_i - \beta_0 - \beta_1 x_i)^2\) to zero gives the closed-form solutions:
+\[
+\beta_1 = \frac{\mathrm{cov}(x,y)}{\mathrm{var}(x)}, \qquad \beta_0 = \bar{y} - \beta_1 \bar{x}.
+\]
+So the slope is the covariance of \(x\) and \(y\) normalized by the variance of \(x\); the intercept centers the line at the means.</p>
 
-<h3>2.0 Ordinary Least Squares (OLS)</h3>
+<h3>2.0b Matrix Form and Normal Equations (Pages 68–69)</h3>
+<p>With \(X\) the \(m \times d\) matrix of inputs and \(y\) the vector of labels, we minimize \(\|Xw - y\|_2^2\). Geometrically, we are projecting the vector \(y\) onto the column space (span) of \(X\). The optimal \(w\) is the one for which the <strong>residual vector \((y - Xw)\) is orthogonal to every column of \(X\)</strong>—that is, the residual lies in the orthogonal complement of the column space. So \(X^T(y - Xw) = 0\), which rearranges to the <strong>normal equations</strong>:
+\[
+X^T X w = X^T y \quad\Longrightarrow\quad w = (X^T X)^{-1} X^T y
+\]
+(when \(X^T X\) is invertible).</p>
+<p><strong>Maximum likelihood and OLS.</strong> If we assume the data are generated as \(y^i = w^T x^i + \epsilon^i\) with \(\epsilon^i \sim N(0, \sigma^2)\) i.i.d., then the log-likelihood of the data is a constant minus \(\frac{1}{2\sigma^2}\sum_i (y_i - w^T x_i)^2\). Maximizing the log-likelihood is therefore equivalent to minimizing the sum of squared residuals. So <strong>under Gaussian noise, MLE and ordinary least squares (OLS) give the same solution</strong>.</p>
+<h3>2.0c Ordinary Least Squares (OLS) — Gradient Derivation</h3>
 <p>Minimize \(\|Xw - y\|^2 = \sum_i (x_i^T w - y_i)^2\). Taking the gradient with respect to \(w\):</p>
 <div class="formula">
   \[ \nabla_w \|Xw - y\|^2 = 2X^T(Xw - y). \]
@@ -464,18 +529,27 @@ So we “add 1” only when both subtrees have the same rank (a kind of symmetry
   <strong>Why the normal equations?</strong> We are projecting \(y\) onto the column space of \(X\). The residual \(Xw - y\) must be orthogonal to every column of \(X\), i.e. \(X^T(Xw - y) = 0\). That is exactly \(X^T X w = X^T y\).
 </div>
 
-<h3>2.1 Ridge Regression (L2)</h3>
-<p><strong>Objective:</strong> \(\min_w \|Xw - y\|^2 + \lambda \|w\|^2\). The second term penalizes large weights. Taking the derivative in \(w\):</p>
-<div class="formula">
-  \[ \nabla_w \bigl( \|Xw - y\|^2 + \lambda \|w\|^2 \bigr) = 2X^T(Xw - y) + 2\lambda w. \]
-</div>
-<p>Setting to zero: \(X^T(Xw - y) + \lambda w = 0\), so \(X^T X w + \lambda I w = X^T y\).</p>
-<div class="defn">
-  <strong>Closed form:</strong> \( w = (X^T X + \lambda I)^{-1} X^T y. \)
-  Adding \(\lambda I\) (\(\lambda > 0\)) makes all eigenvalues strictly positive (if \(\lambda_i\) are eigenvalues of \(X^T X\), then \(X^T X + \lambda I\) has eigenvalues \(\lambda_i + \lambda > 0\)). So \(X^T X + \lambda I\) is always invertible even when \(X^T X\) is singular.
-</div>
+<h3>2.1 Ridge Regression (L2) and Regularization (Pages 70–72)</h3>
+<p><strong>Objective.</strong> To reduce overfitting or handle ill-posed problems (e.g. \(X^T X\) singular), we add a penalty on the norm of \(w\):
+\[
+\min_w \;\|Xw - y\|_2^2 + \lambda \|w\|_2^2.
+\]
+Taking the gradient and setting it to zero gives \(X^T(Xw - y) + \lambda w = 0\), i.e. \((X^T X + \lambda I) w = X^T y\), so
+\[
+w = (X^T X + \lambda I)^{-1} X^T y.
+\]
+Adding \(\lambda I\) ensures the matrix is invertible even when \(X^T X\) is not; it also shrinks the weights toward zero.</p>
+<p><strong>Bias–variance in a toy model (p.71–72).</strong> For a model of the form \(y^i = a^* x^i + \epsilon^i\) with \(\epsilon^i \sim N(0, \sigma^2)\), the Ridge estimator’s mean squared error decomposes into <strong>variance</strong> plus <strong>bias squared</strong>. With \(\beta = \frac{1}{m}\sum_i (x^i)^2\), one has
+\[
+\mathrm{Variance} = \frac{m\beta\sigma^2}{(\lambda + m\beta)^2}, \qquad \mathrm{Bias}^2 = \frac{\lambda^2 (a^*)^2}{(\lambda + m\beta)^2}.
+\]
+So \(\mathrm{MSE} = \mathrm{Variance} + \mathrm{Bias}^2\). When \(\lambda = 0\) (OLS), variance can be large and bias zero; when \(\lambda \to \infty\), variance goes to zero but bias grows. The <strong>optimal \(\lambda^*</strong> that minimizes MSE in this setting is
+\[
+\lambda^* = \frac{\sigma^2}{(a^*)^2}.
+\]
+So when there is noise (\(\sigma^2 > 0\)), a positive \(\lambda\) can achieve lower MSE than OLS—Ridge can outperform unregularized least squares by trading a little bias for a reduction in variance.</p>
 <div class="intuition">
-  <strong>Why Ridge helps.</strong> When \(X^T X\) is nearly singular, small changes in \(y\) can cause huge changes in \(w\). Adding \(\lambda I\) stabilizes the inverse and shrinks \(w\) toward zero, trading bias for lower variance.
+  <strong>Why Ridge helps.</strong> When \(X^T X\) is nearly singular, small changes in \(y\) can cause huge changes in \(w\). Adding \(\lambda I\) stabilizes the inverse and shrinks \(w\) toward zero; the optimal \(\lambda^*\) balances variance and bias.
 </div>
 
 <h3>2.2 Lasso (L1)</h3>
@@ -497,17 +571,77 @@ So we “add 1” only when both subtrees have the same rank (a kind of symmetry
   <strong>Tradeoff.</strong> As \(\lambda\) increases, the estimator is pulled toward zero (bias increases) but becomes less sensitive to the sample (variance decreases). The best \(\lambda\) balances the two.
 </div>
 
-<p><strong>Ridge bias–variance (parametric form):</strong> Under a Bayesian-style model with true parameter \(a^*\) and noise variance \(\sigma^2\), the Ridge estimator has MSE of the form \(\frac{m\beta\sigma^2}{(\lambda + m\beta)^2} + \frac{\lambda^2 (a^*)^2}{(\lambda + m\beta)^2}\) (variance + bias²). The <strong>optimal \(\lambda^* = \sigma^2 / (a^*)^2</strong> minimizes this (balance variance and bias).</p>
+<h3>2.4 Kernel Methods (Pages 73–74)</h3>
+<p><strong>Feature expansion.</strong> Linear boundaries in the original space may be inadequate. We can map inputs \(x\) to a higher-dimensional vector \(\phi(x)\) (e.g. quadratic features like \(x_1^2, x_1 x_2, x_2^2\)) and fit a linear model in that space. That yields non-linear decision boundaries in the original \(x\)-space.</p>
+<p><strong>The kernel trick.</strong> Many algorithms (including regression and the perceptron) only need inner products \(\langle \phi(x^1), \phi(x^2) \rangle\). A <strong>kernel function</strong> \(K(x^1, x^2)\) is defined to equal this inner product in some feature space: \(K(x^1, x^2) = \langle \phi(x^1), \phi(x^2) \rangle\). We can then work in the high-dimensional space without ever forming \(\phi(x)\) explicitly—we only evaluate \(K\). For example, \(K(x,z) = (x \cdot z)^2\) corresponds to a quadratic feature map.</p>
+<p><strong>Weight representation.</strong> In the feature space, the optimal weight vector \(w\) can be expressed as a linear combination of the training instance mappings: \(w = \sum_i y^i \phi(x^i)\) (with coefficients given by the labels or by the dual solution). Prediction on a new point \(z\) is then a sum of kernel evaluations: \(f(z) = \sum_i y^i K(x^i, z)\). We never need to store or compute the high-dimensional \(\phi\); we only need the kernel \(K\).</p>
 
 <!-- ========== SECTION 3 ========== -->
 <!-- ========== SECTION 4 ========== -->
 <h2 id="sec7">Part IX: Optimization &amp; Loss (Pages 75–84)</h2>
-<p>Training ML models means minimizing a loss over parameters. <strong>Gradient descent (p.75–77)</strong> uses the first-order approximation \(f(w+d) \approx f(w) + \nabla f(w)^T d\) and updates \(w \leftarrow w - \eta \nabla f(w)\) so we move in the direction of steepest decrease. For <strong>convex</strong> \(f\) (chord above graph: \(f(ax_1+(1-a)x_2) \le a f(x_1)+(1-a)f(x_2)\)), any local minimum is global. Equivalently, \(f(\text{midpoint}) \le \text{average of } f(\text{endpoints})\). <strong>GD algorithm (p.77):</strong> Init \(w\) → Compute \(\nabla f(w)\) → Update \(w_{\mathrm{new}} = w_{\mathrm{old}} - \eta \nabla f(w)\); repeat. Taylor expansion justifies the linear approximation; we choose step size \(\eta\) and a stopping condition (e.g. \(\|\nabla f(w)\|\) small).</p>
-<p><strong>SGD (p.78):</strong> When \(f = \frac{1}{m}\sum_i f_i\), we update using one random example’s gradient; \(\mathbb{E}[\text{update}] = \text{full gradient}\). <strong>Subgradient (p.79)</strong> for non-differentiable losses (e.g. hinge): a vector \(v\) with \(f(w') \ge f(w) + v^T(w'-w)\).</p>
-<div class="defn"><strong>\(L\)-smooth (p.80):</strong> \(\|\nabla f(x)-\nabla f(y)\| \le L\|x-y\|\). The gradient does not change too fast.</div>
-<div class="proof"><strong>Descent Lemma:</strong> With \(\eta = 1/L\), \(f(x_{k+1}) \le f(x_k) - \frac{1}{2L}\|\nabla f(x_k)\|^2\). So each step decreases \(f\) by at least \(\frac{1}{2L}\|\nabla f(x_k)\|^2\). Summing over \(T\) steps: \(\sum_{k=1}^T \|\nabla f(x_k)\|^2 \le 2L(f(x_1)-f(x^*))\), hence <strong>\(1/T\) rate (p.81):</strong> \(\min_j \|\nabla f(x_j)\|^2 \le \frac{2L(f(x_1)-f(x^*))}{T}\). So \(O(1/\epsilon)\) iterations suffice for an \(\epsilon\)-approximate stationary point.</div>
-<p><strong>Losses (p.82):</strong> Detailed comparison: <strong>0/1 (classification):</strong> \(\ell(z) = \mathbf{1}[z \le 0]\) (non-convex, non-smooth). <strong>Square:</strong> \(\ell(z) = (1-z)^2\) (smooth, convex). <strong>Hinge:</strong> \(\ell(z) = \max\{1-z, 0\}\) (SVMs; convex, non-differentiable at 1). <strong>Logistic:</strong> \(\ell(z) = \ln(1 + e^{-z})\) (smooth, convex).</p>
-<p><strong>Logistic regression (p.83–84):</strong> <strong>Sigmoid</strong> \(\sigma(t) = \frac{1}{1 + e^{-t}}\). Model \(\Pr[y=1|x] = \sigma(w\cdot x)\). Log-likelihood \(-\sum_i \ln(1+e^{-y_i w^T x_i})\) is <strong>convex in \(w\)</strong>: the Hessian is positive semi-definite (each term has the form of a logistic loss with a positive curvature factor), so GD finds the global minimum. Maximum likelihood for the logistic model thus reduces to convex optimization.</p>
+
+<p><strong>Motivation.</strong> Training a model usually means choosing parameters \(w\) that minimize a loss function \(f(w)\). We do this iteratively: from the current \(w\), we take a step that reduces \(f\). This section explains why moving in the direction of the negative gradient works, how to do it (gradient descent and its stochastic variant), how fast we converge under smoothness, and how common loss functions and logistic regression fit into this picture.</p>
+
+<h3>9.1 Convexity and the Intuition of Gradient Descent (Pages 75–76)</h3>
+<p><strong>Convexity.</strong> A function \(f\) is <strong>convex</strong> if the graph lies below the chord between any two points. In other words, the value at the midpoint is at most the average of the values at the endpoints:
+\[
+f\bigl(\tfrac{1}{2}x_1 + \tfrac{1}{2}x_2\bigr) \le \tfrac{1}{2}f(x_1) + \tfrac{1}{2}f(x_2).
+\]
+(More generally, \(f(\alpha x_1 + (1-\alpha)x_2) \le \alpha f(x_1) + (1-\alpha)f(x_2)\) for \(\alpha \in [0,1].\)) For differentiable \(f\), an equivalent characterization is the <strong>first-order condition</strong>: \(f\) is convex if and only if
+\[
+f(y) \ge f(x) + \nabla f(x)^T (y - x)
+\]
+for all \(x, y\). So the linear approximation at \(x\) is a global <em>under</em>-estimator of \(f\). A consequence: any local minimum of a convex function is a global minimum.</p>
+<p><strong>Why the negative gradient?</strong> To minimize \(f\), we want to move in a direction that decreases \(f\) as much as possible. For a small step \(\epsilon d\) with \(\|d\| = 1\), Taylor expansion gives \(f(x + \epsilon d) \approx f(x) + \epsilon \nabla f(x)^T d\). To make this decrease, we want \(\nabla f(x)^T d\) as negative as possible. That is achieved by choosing \(d\) in the direction of \(-\nabla f(x)\). So <strong>moving in the direction of the negative gradient</strong> is the direction of steepest descent. For a sufficiently small step size, such a step is guaranteed to reduce \(f\).</p>
+
+<h3>9.2 The Gradient Descent Algorithm (Page 77)</h3>
+<p><strong>Protocol.</strong></p>
+<ol>
+  <li>Initialize \(w\) (e.g. at random).</li>
+  <li>If \(\|\nabla f(w)\|_2\) is below a chosen threshold, stop (we are at an approximate stationary point, i.e. near a local minimum for convex \(f\)).</li>
+  <li>Otherwise, update: \(w_{\mathrm{new}} = w_{\mathrm{old}} - \eta \nabla f(w)\), where \(\eta > 0\) is the step size. Then repeat from step 2.</li>
+</ol>
+<p><strong>Quadratic example.</strong> For \(f(x) = x^T A x - b^T x\) (with \(A\) symmetric), the gradient is \(\nabla f(x) = 2Ax - b\). So the GD update is \(x \leftarrow x - \eta(2Ax - b)\). For convex quadratics (e.g. \(A \succeq 0\)), this converges to the minimizer when \(\eta\) is chosen appropriately.</p>
+
+<h3>9.3 Gradient Descent vs. Stochastic Gradient Descent (Page 78)</h3>
+<p><strong>Batch gradient for MSE.</strong> In linear regression we minimize the mean squared error \(\mathrm{MSE}(w) = \frac{1}{m}\sum_{j=1}^m (w^T x^j + b - y^j)^2\). The gradient is the average of the per-example gradients:
+\[
+\nabla \mathrm{MSE}(w) = \frac{2}{m} \sum_{j=1}^{m} (w^T x^j + b - y^j)\, x^j.
+\]
+Batch gradient descent uses this full gradient at each iteration—expensive when \(m\) is large.</p>
+<p><strong>Stochastic gradient descent (SGD).</strong> Instead of summing over all \(m\) points, SGD picks one index \(j\) uniformly at random and updates \(w\) using only that example’s gradient. So each update is much cheaper. The key fact: <strong>the expected value of the SGD update equals the full GD update</strong>—\(\mathbb{E}[w_{\mathrm{new},\mathrm{SGD}}] = w_{\mathrm{new},\mathrm{GD}}\) when the expectation is over the random choice of \(j\). So SGD is an unbiased, efficient approximation to full gradient descent and is standard for large datasets.</p>
+
+<h3>9.4 Smoothness and Convergence Analysis (Pages 79–81)</h3>
+<p><strong>\(L\)-smoothness.</strong> A differentiable function \(f\) has <strong>\(L\)-Lipschitz gradients</strong> (or is <strong>\(L\)-smooth</strong>) if
+\[
+\|\nabla f(x) - \nabla f(y)\| \le L \|x - y\|_2
+\]
+for all \(x, y\). So the gradient does not change too rapidly; the slope of \(f\) is “controlled” by \(L\).</p>
+<p><strong>Descent lemma.</strong> For an \(L\)-smooth function, if we take a step of size \(\eta = 1/L\) in the negative gradient direction—\(w^{k+1} = w^k - \frac{1}{L}\nabla f(w^k)\)—then the function value decreases by at least a fixed amount at each step:
+\[
+f(w^{k+1}) \le f(w^k) - \frac{1}{2L} \|\nabla f(w^k)\|^2.
+\]
+So each step guarantees a decrease of at least \(\frac{1}{2L}\|\nabla f(w^k)\|^2\).</p>
+<p><strong>Convergence rate.</strong> Summing this inequality over \(k = 1, \ldots, T\) and using \(f(w^{T+1}) \ge f(w^*)\) (where \(w^*\) is a minimizer) gives \(\sum_{k=1}^T \|\nabla f(w^k)\|^2 \le 2L\bigl(f(w^1) - f(w^*)\bigr)\). So the sum of squared gradient norms is bounded. In particular, the <strong>minimum</strong> squared gradient over those \(T\) iterations satisfies
+\[
+\min_{j=1,\ldots,T} \|\nabla f(w^j)\|^2 \le \frac{2L\bigl(f(w^1) - f(w^*)\bigr)}{T}.
+\]
+So we get an \(O(1/T)\) rate: after \(T\) steps, at least one iterate has gradient norm squared of order \(1/T\). To reach a point where \(\|\nabla f(w)\|^2 \le \epsilon\), we need \(T = O(1/\epsilon)\) iterations.</p>
+<div class="defn"><strong>Subgradient (p.79).</strong> For non-differentiable losses (e.g. hinge \(\max\{0, 1-z\}\)), we use a <strong>subgradient</strong>: a vector \(v\) such that \(f(w') \ge f(w) + v^T(w' - w)\) for all \(w'\). Subgradient descent uses \(v\) in place of \(\nabla f(w)\) when the gradient does not exist.</div>
+
+<h3>9.5 Loss Functions and Logistic Regression (Pages 82–84)</h3>
+<p><strong>Loss comparison.</strong> In classification we predict with \(\mathrm{sign}(w^T x)\) and measure quality with a loss \(\ell(z)\) where \(z = y\, (w^T x)\) (so a correct prediction has \(z > 0\)).</p>
+<ul>
+  <li><strong>0/1 loss:</strong> \(\ell(z) = \mathbf{1}[z \le 0]\)—counts mistakes directly. It is non-convex and non-smooth, so hard to optimize with gradient methods.</li>
+  <li><strong>Hinge loss:</strong> \(\ell(z) = \max\{0, 1 - z\}\). Convex upper bound on 0/1 loss; used in SVMs. Non-differentiable at \(z = 1\).</li>
+  <li><strong>Logistic loss:</strong> \(\ell(z) = \ln(1 + e^{-z})\). Convex and smooth; well-suited for gradient descent.</li>
+  <li><strong>Square loss:</strong> \(\ell(z) = (1-z)^2\). Smooth and convex; often used in regression-style classification.</li>
+</ul>
+<p><strong>Logistic regression.</strong> We model the probability of the positive class with the <strong>sigmoid</strong> \(\sigma(t) = \frac{1}{1 + e^{-t}}\). So \(\Pr[y = 1 \mid x] = \sigma(w \cdot x)\). Given data \((x^i, y^i)\), we maximize the probability of the observed labels, or equivalently minimize the <strong>negative log-likelihood</strong>:
+\[
+-\sum_i \ln\bigl(1 + e^{-y^i w^T x^i}\bigr).
+\]
+This is a sum of logistic losses (one per example). The function is <strong>convex in \(w\)</strong> (the Hessian is positive semi-definite), so gradient descent finds the global minimum—the maximum likelihood estimate. Thus logistic regression reduces to convex optimization and can be solved efficiently with GD or SGD.</p>
 
 <hr>
 <p><em>End of review. Ordered by Scribble Together pages 1–84. Every algorithm, proof, and key example from the handwritten notes is included or summarized. Open in a browser to render math.</em></p>
