@@ -114,6 +114,7 @@
     <h2>1B. Useful inequalities and proof templates</h2>
     <ul>
       <li><strong>Basic bounds used often:</strong> $1-x \le e^{-x}$ (for $(1-\epsilon)^m$), and for $x\in(0,1/2)$, $-x^2 - x \le \ln(1-x) \le -x$ (for RWM).</li>
+      <li><strong>Markov:</strong> For $X\ge 0$ and $a>0$, $\Pr[X \ge a] \le \mathbb{E}[X]/a$. (No variance assumption; often used as a first step before Chebyshev/Hoeffding.)</li>
       <li><strong>Hoeffding (for $X_i\in[0,1]$):</strong> $\Pr\bigl[|\tfrac{1}{n}\sum X_i - \mu|\ge\Delta\bigr]\le 2e^{-2n\Delta^2}$.</li>
       <li><strong>Finite-class PAC pattern:</strong> (1) Fix a bad $h$ and bound $\Pr[\text{consistent}]$; (2) apply union bound over all $h\in\mathcal{C}$; (3) choose $m$ so failure probability $\le\delta$.</li>
       <li><strong>Potential-function pattern (Winnow/WM/RWM):</strong> (1) Define $W_t$; (2) relate $W_{t+1}$ to $W_t$ on mistakes; (3) compare $W_T$ to the weight of the best hypothesis/expert to solve for the number of mistakes.</li>
