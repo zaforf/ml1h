@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ML 363H Final Cheat Sheet</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']]
+      }
+    };
+  </script>
+  <style>
+    @page {
+      margin: 0.3in;
+    }
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 10px;
+      line-height: 1.2;
+      margin: 0.25in;
+    }
+    h1 {
+      font-size: 14px;
+      margin-bottom: 0.05in;
+      text-align: center;
+    }
+    h2 {
+      font-size: 11.5px;
+      margin-top: 0.1in;
+      margin-bottom: 0.03in;
+      border-bottom: 1px solid #999;
+    }
+    h3 {
+      font-size: 10.5px;
+      margin-top: 0.06in;
+      margin-bottom: 0.02in;
+    }
+    p {
+      margin: 0 0 0.03in 0;
+    }
+    ul {
+      margin: 0.01in 0 0.015in 0.14in;
+      padding-left: 0.1in;
+    }
+    li {
+      margin: 0 0 0.02in 0;
+    }
+    .section {
+    }
+    .formula {
+      margin: 0.03in 0;
+    }
+    .small {
+      font-size: 10px;
+    }
+    .two-col {
+      column-count: 2;
+      column-gap: 0.25in;
+    }
+    .part-banner {
+      font-size: 10.5px;
+      font-weight: bold;
+      margin: 0.14in 0 0.08in 0;
+      padding: 0.05in 0;
+      border-top: 1px solid #666;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+
+<h1>ML 363H — Final Exam Cheat Sheet</h1>
+<p class="small"><strong>§1–6</strong> core (online, PAC/VC, regression, perceptron); <strong>§7–14</strong> second half; <strong>§15</strong> is short intuition and facts that are <em>not</em> spelled out above (tail-bound “which tool,” union-bound mental model, domain shift). Symbols: $D$, $\mathcal{C}$, $m$/$n$, $\epsilon$, $\delta$, VC-dim; margin $\rho$ (§6) vs $\gamma$ (§14 SQ).</p>
+
+<div class="two-col">
+
+  <div class="section">
+    <h2>1. Mistake-Bounded (MB) Model</h2>
+    <h3>1.1 Definition</h3>
+    <ul>
+      <li><strong>Mistake bound $M$</strong> for $\mathcal{C}$: for every target $f\in\mathcal{C}$ and every labeled sequence consistent with $f$, the learner makes at most $M$ mistakes.</li>
+    </ul>
+
+    <h3>1.2 Elimination (Monotone / General Disjunctions)</h3>
+    <p><strong>Monotone disjunctions:</strong> $f(x)=x_{i_1}\lor\cdots\lor x_{i_k}$ over $\{0,1\}^d$.</p>
+    <ul>
+      <li><strong>Algorithm (sketch):</strong> init $h = x_1\lor\cdots\lor x_d$. On $(x,y)$, predict $\hat{y}=h(x)$; on false positive, delete every $x_i$ with $x_i=1$.</li>
+      <li><strong>Invariant:</strong> any literal that appears in the true target is never removed.</li>
+      <li><strong>Bound:</strong> start with $d$ literals, each false-positive removes $\ge1$ literal, so $\#\text{mistakes}\le d$.</li>
+      <li><strong>Takeaway:</strong> elimination is the canonical example of a simple MB algorithm: mistakes correspond to “ruling out” wrong literals.</li>
+    </ul>
+    <p><strong>General disjunctions (with negations):</strong> introduce $Y_i=\bar{X}_i$, run elimination on $2d$ literals ⇒ $MB\le 2d$.</p>
+
+    <h3>1.3 Halving Algorithm (Finite $\mathcal{C}$)</h3>
+    <ul>
+      <li>Maintain version space $V_t = \{h\in\mathcal{C}$ consistent with seen examples$\}$.</li>
+      <li>Predict by majority vote over $V_t$; on a mistake, remove all hypotheses agreeing with the wrong prediction.</li>
+      <li><strong>Key inequality:</strong> after each mistake, $|V_{t+1}|\le|V_t|/2$.</li>
+      <li>Thus after $M$ mistakes, $|V_M|\le|\mathcal{C}|/2^M$; but must have $|V_M|\ge1$ (true $f$). So $2^M\le|\mathcal{C}|$, i.e.
+        $$M\le\log_2|\mathcal{C}|.$$
+      </li>
+      <li><strong>Takeaway:</strong> “each mistake halves the version space” $\Rightarrow$ information-theoretically optimal MB $\approx \log_2|\mathcal{C}|$.</li>
+    </ul>
+
+    <h3>1.4 Decision Lists (Orders of Rules)</h3>
+    <p>A 1-decision list is an ordered if-then-else over literals: $(L_1\to b_1),\dots,(L_k\to b_k)$, default $b_0$.</p>
+    <ul>
+      <li>1-decision lists (single-literal $L_i$) of length $k$ on $n$ vars: $MB = O(nk)$.</li>
+      <li>$t$-decision lists (conjunctions of $\le t$ literals per rule): $MB = n^{O(t)}$.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>1B. Proof templates</h2>
+    <ul>
+      <li><strong>Finite-class PAC:</strong> bad $h$ has $\Pr[\text{consistent on }m]\le(1-\epsilon)^m$; union over $\mathcal{C}$; pick $m\ge\frac1\epsilon\ln\frac{|\mathcal{C}|}{\delta}$.</li>
+      <li><strong>Potential / weights:</strong> bound $W_{t+1}$ vs $W_t$ (Winnow, WM, boosting); sandwich total weight vs weight of mistakes or best expert.</li>
+      <li><strong>Margin:</strong> grow $w_t\cdot w^*$, bound $\|w_t\|$, finish with Cauchy–Schwarz (standard and SQ perceptron variants).</li>
+    </ul>
+    <p class="small"><strong>§15</strong> — when to use Markov vs Chebyshev vs Hoeffding, union-bound intuition, domain shift (not repeated below).</p>
+
+    <h2>2. Multiplicative Updates & Experts</h2>
+
+    <h3>2.1 Winnow</h3>
+    <p>Sparse disjunction target with $k\ll d$ relevant variables.</p>
+    <ul>
+      <li>Maintain $w_i\ge0$, init $w_i=1$, threshold $\theta=d$; predict $1$ if $\sum_i w_i x_i\ge\theta$.</li>
+      <li><strong>Type A (false negative):</strong> $y=1,\hat{y}=0$. For all $i$ with $x_i=1$, set $w_i\leftarrow 2w_i$.</li>
+      <li><strong>Type B (false positive):</strong> $y=0,\hat{y}=1$. For all $i$ with $x_i=1$, set $w_i\leftarrow 0$ (or scale down).</li>
+    </ul>
+    <p><strong>Potential:</strong> $W = \sum_i w_i$.</p>
+    <ul>
+      <li>Each relevant variable can be doubled at most $\log_2 d$ times before its weight alone would exceed $\theta=d$ ⇒ at most $k\log_2 d$ Type-A mistakes.</li>
+      <li>On Type A: $W$ increases by $<d$ (since $\sum_i w_i x_i<d$ before update).</li>
+      <li>On Type B: $W$ decreases by $\ge d$ (since $\sum_i w_i x_i\ge\theta=d$).</li>
+      <li>$W$ starts at $d$ and never negative ⇒ $\#$Type B mistakes $\le$ const·$\#$Type A mistakes.</li>
+      <li><strong>Bound:</strong> $MB \le 2k\log_2 d = O(k\log d)$.</li>
+      <li><strong>Takeaway:</strong> when the target is sparse ($k\ll d$), Winnow’s MB depends on $k$ not $d$ ⇒ <em>attribute-efficient</em> learning.</li>
+    </ul>
+
+    <h3>2.2 Weighted Majority (Deterministic)</h3>
+    <ul>
+      <li>$K$ experts, weights $w_i^{(t)}$ (init 1); predict by weighted majority. On mistake: halve weights of wrong experts.</li>
+    </ul>
+    <p><strong>Potential:</strong> $W_t=\sum_i w_i^{(t)}$.</p>
+    <ul>
+      <li>On a mistake, at least half of $W_t$ was wrong; after halving them,
+        $$W_{t+1}\le \tfrac{1}{2}\cdot\tfrac{W_t}{2}+\tfrac{W_t}{2}=\tfrac{3}{4}W_t.$$
+      </li>
+      <li>Thus after $M$ mistakes: $W_M\le K(3/4)^M$.</li>
+      <li>Best expert with $m$ mistakes has weight $(1/2)^m$ ⇒ $(1/2)^m\le W_M$.</li>
+      <li>Combine:
+        $$(1/2)^m\le K(3/4)^M \Rightarrow M\le \frac{\ln2}{\ln(4/3)}\bigl(m+\log_2K\bigr)\approx 2.4(m+\log_2K).$$
+      </li>
+      <li><strong>Takeaway:</strong> we compete with the best expert; our mistakes are within a constant factor plus a $\log K$ overhead.</li>
+    </ul>
+
+    <h3>2.3 Randomized Weighted Majority (RWM)</h3>
+    <ul>
+      <li>Parameter $\epsilon\in(0,1/2)$. If expert $i$ is wrong: $w_i\leftarrow(1-\epsilon)w_i$.</li>
+      <li>Prediction: choose expert $i$ with prob. $w_i/W_t$; let $\ell_t$ be expected loss (weighted fraction wrong).</li>
+    </ul>
+    <p><strong>Weight recurrence:</strong> $W_{t+1}=W_t(1-\epsilon\ell_t)$.</p>
+    <p><strong>Bound idea:</strong></p>
+    <ul>
+      <li>Best expert with $m$ mistakes has weight $(1-\epsilon)^m$ ⇒ $(1-\epsilon)^m\le K\prod_t(1-\epsilon\ell_t)$. Take logs and use $-x^2-x\le\ln(1-x)\le -x$ for $x\in(0,1/2)$:
+        $$\sum_t \ell_t \le (1+\epsilon)m + \frac{\ln K}{\epsilon}.$$</li>
+      <li>So $\mathbb{E}[M]\le (1+\epsilon)m + \frac{\ln K}{\epsilon}$.</li>
+      <li><strong>Takeaway:</strong> by randomizing, we can get an expected loss arbitrarily close to $(1+\epsilon)$ times the best expert, trading off with an additive $\ln K/\epsilon$ term.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>3. PAC Learning & Sample Complexity</h2>
+
+    <h3>3.1 Finite Classes, Realizable Case</h3>
+    <ul>
+      <li>Bad $h$: $\mathrm{err}_D(h)>\epsilon$.</li>
+      <li>For fixed bad $h$: $\Pr[\text{consistent with $m$}] \le (1-\epsilon)^m \le e^{-\epsilon m}$.</li>
+      <li>Union bound over $\mathcal{C}$:
+        $$\Pr[\exists\ \text{bad $h$ consistent}] \le |\mathcal{C}|e^{-\epsilon m}.$$
+      </li>
+      <li>To make this $\le\delta$:
+        $$m \ge \frac{1}{\epsilon}\ln\frac{|\mathcal{C}|}{\delta}.$$
+      </li>
+      <li>Any consistent learner is $(\epsilon,\delta)$-PAC.</li>
+      <li><strong>Takeaway:</strong> finite-class PAC: more hypotheses and smaller $\epsilon,\delta$ mean more samples, via counting + union bound.</li>
+    </ul>
+
+    <h3>3.2 Axis-Parallel Rectangles</h3>
+    <ul>
+      <li>Algorithm: tightest-fitting axis-aligned rectangle around positives; define 4 strips (top/bottom/left/right) of mass $\epsilon/4$; error $>\epsilon$ implies some strip unseen.</li>
+      <li>Miss-prob. for a strip: $(1-\epsilon/4)^m$; by union bound:
+        $$\Pr[\text{failure}] \le 4(1-\epsilon/4)^m \le 4 e^{-\epsilon m/4}.$$
+      </li>
+      <li>Set $\le\delta$ ⇒
+        $$m \ge \frac{4}{\epsilon}\ln\frac{4}{\delta}.$$
+      </li>
+    </ul>
+
+    <h3>3.3 MB $\Rightarrow$ PAC (Idea)</h3>
+    <ul>
+      <li>If a class is MB-learnable with bound $M$, it is PAC-learnable with roughly
+        $$m = O\!\left(\frac{1}{\epsilon}\bigl(M + \log\tfrac{1}{\delta}\bigr)\right).$$
+      </li>
+      <li>Sketch: MB bound $M$ ⇒ on $m$ fresh examples, at most $M$ are misclassified. Use concentration on empirical vs true error plus a union/conditioning argument.</li>
+      <li><strong>Takeaway:</strong> an online MB guarantee can be converted into a distributional PAC guarantee with only a $1/\epsilon$ and $\log(1/\delta)$ overhead.</li>
+    </ul>
+    <h3>3.4 Empirical vs true error (uniform convergence)</h3>
+    <ul>
+      <li>For a fixed $h$, Hoeffding on a hold-out set of size $n$ gives
+        $$\Pr\bigl[|\widehat{\mathrm{err}}(h) - \mathrm{err}_D(h)| \ge \epsilon\bigr] \le 2e^{-2n\epsilon^2}.$$
+      </li>
+      <li>So it is enough to take
+        $$n \ge \frac{1}{2\epsilon^2}\ln\frac{2}{\delta}$$
+        to ensure $|\widehat{\mathrm{err}}(h) - \mathrm{err}_D(h)| \le \epsilon$ with prob. $\ge 1-\delta$.</li>
+      <li><strong>Takeaway:</strong> empirical error on a held-out subset is close to true error once you have $\Theta(1/\epsilon^2)$ many hold-out points.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>4. VC Dimension & Radon</h2>
+
+    <h3>4.1 Definitions</h3>
+    <ul>
+      <li><strong>Shattering:</strong> $\mathcal{C}$ shatters $S$ if for every labeling of $S$ there is $h\in\mathcal{C}$ realizing it.</li>
+      <li><strong>VC-dim:</strong> $\mathrm{VC}(\mathcal{C})$ = max $|S|$ that can be shattered.</li>
+      <li><strong>Examples:</strong> intervals (VC=2), axis-parallel rectangles in $\mathbb{R}^d$ (VC=$2d$), halfspaces in $\mathbb{R}^d$ (VC=$d+1$).</li>
+    </ul>
+
+    <h3>4.2 Fundamental Theorem (VC version)</h3>
+    <ul>
+      <li><strong>Uniform convergence (matches notes):</strong> Draw $m = O((\mathrm{VC}(\mathcal{C}) + \log(1/\delta))/\epsilon^2)$ samples. With prob. $\ge 1-\delta$: $|\widehat{\mathrm{err}}(h) - \mathrm{err}(h)| \le \epsilon$ for all $h \in \mathcal{C}$. Empirical error approximates true error for every $h\in\mathcal{C}$.</li>
+      <li>Realizable variant: consistent learner needs only $m = O((d + \log(1/\delta))/\epsilon)$ to get $\mathrm{err}_D(h)\le\epsilon$ (no $\epsilon^2$).</li>
+      <li><strong>Takeaway:</strong> VC-dim is the capacity measure; $\epsilon^2$ when bound holds uniformly over all $h\in\mathcal{C}$.</li>
+    </ul>
+
+    <h3>4.3 Radon & VC(Halfspaces)</h3>
+    <ul>
+      <li><strong>Radon’s theorem:</strong> any $d+2$ points in $\mathbb{R}^d$ can be partitioned into $A,B$ with $\mathrm{conv}(A)\cap\mathrm{conv}(B)\ne\emptyset$ (via an affine dependence $\sum\alpha_i x_i=0$, $\sum\alpha_i=0$).</li>
+      <li>Label $A$ as $+1$, $B$ as $-1$; the common point of the hulls would have to be both $+1$ and $-1$, so no halfspace can realize this labeling ⇒ no set of $d+2$ points is shattered. Together with a $d+1$-point construction, VC-dim of halfspaces is $d+1$.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>5. Regression & Optimization</h2>
+
+    <h3>5.1 Regression Basics</h3>
+    <ul>
+      <li><strong>Bayes regressor:</strong> for squared loss, $g^*(x)=\mathbb{E}[Y|X=x]$ minimizes $\mathbb{E}[(Y-g(X))^2]$.</li>
+      <li><strong>OLS (matrix):</strong> minimize $\|Xw-y\|^2$; gradient $2X^T(Xw-y)$; normal equations $X^TXw = X^Ty$ ⇒ $w = (X^TX)^{-1}X^Ty$.</li>
+      <li><strong>Simple linear regression</strong> $y = \beta_0 + \beta_1 x$:
+        $$\beta_1 = \frac{\mathrm{cov}(x,y)}{\mathrm{var}(x)}, \qquad \beta_0 = \bar{y} - \beta_1\bar{x}.$$
+      </li>
+      <li><strong>Ridge:</strong> minimize $\|Xw-y\|^2 + \lambda\|w\|^2$ ⇒ $w = (X^TX+\lambda I)^{-1}X^Ty$.</li>
+    </ul>
+
+    <h3>5.2 Bias–Variance (scalar form + Ridge formulas)</h3>
+    <ul>
+      <li>For any estimator $\hat{a}$ of $a$:
+        $$\mathrm{MSE}(\hat{a}) = \mathbb{E}[(\hat{a}-a)^2] = \underbrace{\mathrm{Var}(\hat{a})}_{\text{variance}} + \underbrace{(\mathbb{E}[\hat{a}]-a)^2}_{\text{bias}^2}.$$
+      </li>
+      <li><strong>Ridge toy model</strong> $y^i = a^* x^i + \epsilon^i$, $\epsilon^i\sim N(0,\sigma^2)$, $\beta = \frac{1}{m}\sum_i (x^i)^2$:
+        $$\text{Variance} = \frac{m\beta\sigma^2}{(\lambda + m\beta)^2}, \qquad \text{Bias}^2 = \frac{\lambda^2 (a^*)^2}{(\lambda + m\beta)^2}.$$
+        So $\mathrm{MSE} = \text{Variance} + \text{Bias}^2$.</li>
+      <li><strong>When is variance minimized?</strong> Variance is large at $\lambda=0$ (OLS) and decreases as $\lambda$ increases (eventually → 0 as $\lambda\to\infty$). So variance is minimized in the limit $\lambda\to\infty$ (all weight shrunk). But MSE is minimized at a <em>finite</em> $\lambda$ because bias² grows with $\lambda$.</li>
+      <li><strong>Optimal $\lambda$</strong> (minimizes MSE in this toy model):
+        $$\lambda^* = \frac{\sigma^2}{(a^*)^2}.$$
+        So Ridge can beat OLS ($\lambda=0$) when there is noise ($\sigma^2>0$): we trade a little bias for lower variance.</li>
+    </ul>
+
+    <h3>5.3 GD, SGD, & Smoothness</h3>
+    <ul>
+      <li><strong>GD update:</strong> $w_{t+1} = w_t - \eta \nabla f(w_t)$.</li>
+      <li><strong>SGD:</strong> for $f(w)=\frac{1}{m}\sum_i f_i(w)$, use $w_{t+1} = w_t - \eta \nabla f_{i_t}(w_t)$ with random $i_t$.</li>
+      <li><strong>Sigmoid:</strong> $\sigma(z) = \frac{1}{1+e^{-z}}$, $\sigma'(z)=\sigma(z)(1-\sigma(z))$.</li>
+    </ul>
+    <p><strong>$L$-smoothness:</strong> $\|\nabla f(x)-\nabla f(y)\|\le L\|x-y\|$ (gradient does not change too abruptly).</p>
+    <ul>
+      <li><strong>Descent Lemma:</strong> with $\eta=1/L$,
+        $$f(x_{k+1}) \le f(x_k) - \frac{1}{2L}\|\nabla f(x_k)\|^2.$$
+      </li>
+      <li>Summing:
+        $$\sum_{k=1}^T \|\nabla f(x_k)\|^2 \le 2L(f(x_1)-f(x^*)).$$
+      </li>
+      <li>Thus
+        $$\min_{1\le k\le T}\|\nabla f(x_k)\|^2 \le \frac{2L(f(x_1)-f(x^*))}{T}.$$
+      </li>
+      <li><strong>Takeaway:</strong> for $L$-smooth $f$, the smallest gradient norm encountered after $T$ steps is at most $O(1/\sqrt{T})$ in norm. A small gradient means that $f$ is locally flat around that iterate; for convex $f$ this corresponds to being close to a minimizer.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>6. Perceptron & Losses</h2>
+
+    <h3>6.1 Perceptron Margin Bound (full sketch)</h3>
+    <ul>
+      <li>We can assume $\|x_i\|\le 1$ (scale inputs) and there is a unit vector $w^*$ such that for all $i$,
+        $$y_i (w^*\cdot x_i) \ge \rho > 0.$$
+        Here $\rho$ is the geometric margin.</li>
+      <li>Perceptron update on a mistake $(x_t,y_t)$: $w_{t+1} = w_t + y_t x_t$, with $w_0 = 0$.</li>
+      <li><strong>Alignment with $w^*$:</strong> after one mistake,
+        $$w_{t+1}\cdot w^* = w_t\cdot w^* + y_t (x_t\cdot w^*) \ge w_t\cdot w^* + \rho.$$
+        So after $M$ mistakes:
+        $$w_M\cdot w^* \ge M\rho.$$
+      </li>
+      <li><strong>Norm growth:</strong> on a mistake,
+        $$\|w_{t+1}\|^2 = \|w_t + y_t x_t\|^2 = \|w_t\|^2 + 2y_t(w_t\cdot x_t) + \|x_t\|^2.$$
+        Because we erred, $y_t (w_t\cdot x_t) \le 0$, so
+        $$\|w_{t+1}\|^2 \le \|w_t\|^2 + \|x_t\|^2 \le \|w_t\|^2 + 1.$$
+        Thus $\|w_M\|^2 \le M$ and $\|w_M\|\le\sqrt{M}$.</li>
+      <li><strong>Cauchy–Schwarz:</strong> $w_M\cdot w^* \le \|w_M\|\|w^*\| = \|w_M\|$. Together with the previous inequalities:
+        $$M\rho \le w_M\cdot w^* \le \|w_M\| \le \sqrt{M}.$$
+        Hence $\sqrt{M} \le 1/\rho$ ⇒ $M \le 1/\rho^2$.</li>
+      <li><strong>Takeaway:</strong> if the data are well separated with margin $\rho$, the perceptron makes at most $1/\rho^2$ mistakes; increasing the margin directly reduces the number of updates.</li>
+    </ul>
+
+    <h3>6.2 Losses & Convexity</h3>
+    <ul>
+      <li><strong>Square loss:</strong> $(y-w^Tx)^2$. Natural for regression; gradient is $-2(y-w^Tx)x$.</li>
+      <li><strong>Hinge loss:</strong> $\max(0,1-yw^Tx)$. Zero whenever $y w^Tx \ge 1$; penalizes points inside the margin or misclassified. SGD on hinge with update only when $1-yw^Tx>0$ closely matches perceptron updates.</li>
+      <li><strong>Logistic loss:</strong> $\ln(1+e^{-yw^Tx})$. Smooth and always positive; corresponds to the negative log-likelihood under a logistic model, and leads to probabilistic outputs via $\sigma(w^Tx)$.</li>
+      <li><strong>Convexity (first-order):</strong> $f$ convex iff
+        $$f(y) \ge f(x) + \nabla f(x)^T(y-x)\ \ \forall x,y.$$
+      </li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <p class="part-banner">Second semester — §7 onward</p>
+
+    <h2>7. Boosting & Weak Learners</h2>
+    <h3>7.1 Setup</h3>
+    <ul>
+      <li>$N$ training points, $T$ rounds. <strong>Weak learner:</strong> each $h_t$ has weighted error $\epsilon_t = \mathrm{err}(h_t) \le \frac12 - \gamma$ (edge $\gamma>0$).</li>
+      <li><strong>$\beta$-rule (notes / Schapire-style):</strong> $\beta = \frac{\frac12-\gamma}{\frac12+\gamma}\in(0,1)$. One common update: multiply weight of <em>correct</em> points by $\beta$, leave incorrect weights unchanged; init $w_i=1/N$, total $W^{(1)}=1$.</li>
+      <li><strong>Round $t$ uses only $h_t$:</strong> the weight vector at step $t$ is renormalized from updates by the <em>latest</em> weak hypothesis; the ensemble vote is separate—past mistakes are “remembered” indirectly through the current distribution.</li>
+      <li>Final classifier: majority vote of $h_1,\dots,h_T$.</li>
+    </ul>
+
+    <h3>7.2 Per-round total weight (upper bound route)</h3>
+    <ul>
+      <li>Let $\epsilon_t$ be the weighted error of $h_t$. One step:
+        $$W^{(t+1)} = W^{(t)}\bigl((1-\epsilon_t)\beta + \epsilon_t\bigr).$$
+      </li>
+      <li>Worst case $\epsilon_t = \frac12-\gamma$ gives
+        $$W^{(t+1)} \le W^{(t)}(1-2\gamma).$$
+        Hence $W^{(T+1)} \le (1-2\gamma)^T$.</li>
+    </ul>
+
+    <h3>7.3 Lower bound via misclassified points</h3>
+    <ul>
+      <li>If the final majority misclassifies $x_i$, then $h_t$ was correct on $x_i$ for at most $T/2$ rounds, so $w_i$ was multiplied by $\beta$ at most $T/2$ times:
+        $$w_i^{(T+1)} \ge \frac1N \beta^{T/2}.$$
+      </li>
+      <li>With training error rate $E_{\mathrm{train}}$ (fraction wrong),
+        $$W^{(T+1)} \ge E_{\mathrm{train}}\,\beta^{T/2}.$$
+      </li>
+    </ul>
+
+    <h3>7.4 Combine (exponential decay)</h3>
+    <ul>
+      <li>Sandwich: $E_{\mathrm{train}}\beta^{T/2} \le W^{(T+1)} \le (1-2\gamma)^T$ ⇒
+        $$E_{\mathrm{train}} \le \left(\frac{1-2\gamma}{\sqrt\beta}\right)^T = (1-4\gamma^2)^{T/2} \le e^{-2\gamma^2 T}$$
+        using $1-x\le e^{-x}$.</li>
+      <li><strong>Rounds / sample complexity story:</strong> $T = \Theta\!\left(\frac{1}{\gamma^2}\log\frac{1}{\epsilon}\right)$ merges exponential decay in $T$ (from the weight sandwich) with the need for enough samples per round so the empirical weak learner really has edge $\gamma$ (variance $\sim 1/\gamma^2$ via Chernoff/Hoeffding-style arguments).</li>
+      <li><strong>Balanced weak learner (branching):</strong> need edge on <em>both</em> conditionals $D_+,D_-$ (e.g. accuracy $\ge \frac12+\gamma$ on each). A rule that only predicts majority class globally can look “weak” on one side and give no progress when data are split.</li>
+      <li><strong>Branching-program analysis:</strong> total weight decay $W_T \le W(1-2\gamma)^T$; martingale / <strong>Azuma</strong> controls deviations in the random-walk view of accumulated votes.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>8. Confidence Intervals & Comparing Classifiers</h2>
+    <h3>8.1 Single proportion</h3>
+    <ul>
+      <li>$Y_i = \mathbf{1}[\text{$h$ correct on $x_i$}]$, $\hat p = \frac1n\sum_i Y_i$, $\mathbb E[\hat p]=p$.</li>
+      <li>$\mathrm{Var}(Y_i)=p(1-p)$, $\mathrm{Var}(\hat p)=\frac{p(1-p)}{n}$, $\mathrm{SE}(\hat p)=\sqrt{\frac{p(1-p)}{n}}$.</li>
+      <li><strong>CLT:</strong> $Z=\frac{\hat p - p}{\mathrm{SE}(\hat p)} \approx N(0,1)$ for large $n$.</li>
+      <li><strong>95% CI:</strong> $p \in \hat p \pm 1.96\cdot \widehat{\mathrm{SE}}$ (notes often substitute $2$).</li>
+      <li><strong>80% CI:</strong> $z\approx 1.28$ (notes ~1.3).</li>
+    </ul>
+    <h3>8.2 Difference of two error rates</h3>
+    <ul>
+      <li>$\widehat\Delta = \hat e_1 - \hat e_2$; if independent samples,
+        $$\mathrm{Var}(\widehat\Delta) \approx \frac{\hat e_1(1-\hat e_1)}{n_1} + \frac{\hat e_2(1-\hat e_2)}{n_2}.$$
+      </li>
+      <li>Build CI for $\Delta$ the same way using normal approximation.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>9. Random Projections & Johnson–Lindenstrauss</h2>
+    <h3>9.1 One Gaussian projection</h3>
+    <ul>
+      <li>Draw $r\sim N(0,I_d)$, $f_r(x)=\langle x,r\rangle$. For $\Delta=x-y$: $\mathbb E[f_r(x)-f_r(y)]=0$.</li>
+      <li>$\mathrm{Var}(f_r(x)-f_r(y))=\|\Delta\|_2^2$ and $\mathbb E[(f_r(x)-f_r(y))^2]=\|x-y\|_2^2$.</li>
+    </ul>
+    <h3>9.2 JL lemma (what to remember)</h3>
+    <ul>
+      <li>Map $x\mapsto \frac{1}{\sqrt K}Ax$ with $A\in\mathbb R^{K\times d}$ i.i.d. Gaussian (or subgaussian / sparse sign). For $m$ points, need
+        $$K = O\!\left(\frac{\log m}{\epsilon^2}\right)$$
+        so all pairwise distances are preserved within $(1\pm\epsilon)$ w.h.p. (union bound over $\binom{m}{2}$ pairs + concentration of chi-square / subgaussian sums).</li>
+      <li><strong>Curse of dimensionality tie-in:</strong> JL reduces effective dimension for distance-based methods (e.g. NN) before clustering or search.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>10. PCA, SVD, Power Method</h2>
+    <h3>10.1 PCA objectives</h3>
+    <ul>
+      <li><strong>1-D:</strong> $\max_{\|v\|=1} \frac1m\sum_j \langle x^j,v\rangle^2 = \max_{\|v\|=1} v^T(X^TX)v$ (variance along $v$).</li>
+      <li><strong>$k$-D:</strong> orthonormal $v_1,\dots,v_k$ maximizing projected variance $\frac1m\sum_j\sum_{i=1}^k \langle x^j,v_i\rangle^2$.</li>
+      <li>Data often whitened: subtract mean; optionally scale by std per feature.</li>
+    </ul>
+    <h3>10.2 Spectral facts</h3>
+    <ul>
+      <li>$X^TX$ is symmetric PSD ⇒ eigendecomposition $Q\Lambda Q^T$, eigenvalues $\lambda_i\ge0$.</li>
+      <li>First principal direction = eigenvector for $\lambda_{\max}$.</li>
+    </ul>
+    <h3>10.3 Power method (sketch)</h3>
+    <ul>
+      <li>Iterate $u_{t+1} = Au_t / \|Au_t\|$ for PSD $A$ (or $A=X^TX$). If $\lambda_1>\lambda_2$ and initial $u_0$ has nonzero component along top eigenvector, $u_t$ converges to $v_1$.</li>
+      <li><strong>Rate:</strong> error shrinks like $(\lambda_2/\lambda_1)^t$ ⇒ to reach accuracy $\epsilon$ in direction,
+        $$t = O\!\left(\frac{\log n + \log(1/\epsilon)}{\log(\lambda_1/\lambda_2)}\right).$$
+      </li>
+    </ul>
+    <h3>10.4 SVD & least squares</h3>
+    <ul>
+      <li>$A = U\Sigma V^T = \sum_i \sigma_i u_i v_i^T$. <strong>Right singular vectors</strong> (columns of $V$): eigenvectors of $A^TA$ — for data matrix $X$, these are the <strong>principal directions</strong> (axes of maximum variance). Truncated $V_k^T$ maps a row of $X$ to its $k$-D PCA coordinates.</li>
+      <li><strong>Left singular vectors</strong> (columns of $U$): eigenvectors of $AA^T$. The matrix $U_k\Sigma_k$ gives <strong>scores</strong> / projected data in the $k$-D subspace; $U_k$ alone is the normalized version of those loadings.</li>
+      <li>$\sigma_i^2$ = eigenvalues of $A^TA$. For centered sample matrix $X\in\mathbb R^{m\times d}$, sample variance along $v_i$ ties to $\sigma_i^2/(m-1)$ (same directions as PCA on covariance $\propto X^TX$).</li>
+      <li><strong>Condition number:</strong> $\kappa(X^TX)=\kappa(X)^2$ — forming normal equations squares singular values, so GD on least squares can slow badly vs SVD/pseudoinverse.</li>
+      <li><strong>PCA vs rank-$k$ SVD:</strong> PCA maximizes projected variance; truncating SVD minimizes Frobenius reconstruction error — for centered data, same subspace (Eckart–Young / Pythagorean decomposition).</li>
+      <li><strong>Rank-$k$ approximation (Eckart–Young):</strong> $A_k=\sum_{i=1}^k \sigma_i u_i v_i^T$ minimizes $\|A-B\|_F$ among $\mathrm{rank}(B)\le k$.</li>
+      <li><strong>Least squares:</strong> $\min_x\|Ax-b\|^2$ ⇒ $x = V\Sigma^\dagger U^T b$.</li>
+      <li><strong>PCA from SVD:</strong> $X=U\Sigma V^T \Rightarrow X^TX = V\Sigma^T\Sigma V^T$.</li>
+      <li><strong>Matrix completion (heuristic):</strong> impute missing entries $\to$ truncated SVD $\to$ iterate.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>11. $k$-Means & Unsupervised Basics</h2>
+    <ul>
+      <li>Clusters $S_1,\dots,S_K$, centroids $\mu_i$. Objective:
+        $$\min \sum_{i=1}^K \sum_{x\in S_i} \|x-\mu_i\|_2^2.$$
+      </li>
+      <li><strong>Lloyd:</strong> alternate assign point to nearest $\mu_i$, set $\mu_i$ to cluster mean (monotone decrease, local min).</li>
+      <li><strong>Hardness:</strong> finding global optimum is NP-hard (notes).</li>
+      <li><strong>Nearest neighbor reminder:</strong> 1-NN risk bounded in terms of Bayes risk but needs lots of data in high $d$; JL / feature reduction sometimes helps.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>12. GLM / Logistic / Neural net hooks</h2>
+    <ul>
+      <li><strong>GLM mean:</strong> $\mathbb E[Y|X]=u(w\cdot x)$ with monotone / Lipschitz link $u$.</li>
+      <li><strong>Logistic:</strong> $\Pr[y=1|x]=\sigma(w\cdot x)$, NLL = logistic loss, convex in $w$.</li>
+      <li><strong>Shallow net:</strong> $f(x)=\sum_j a_j\,\sigma(v_j\cdot x)$; universal approximation for reasonable $\sigma$.</li>
+      <li><strong>Backprop pattern:</strong> multivariate chain rule on computational graph; store activations, propagate $\partial L/\partial$ upstream.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>13. LSI, Min-wise hashing, Jaccard (quick)</h2>
+    <ul>
+      <li><strong>Jaccard</strong> for sets $A,B$: $J=|A\cap B|/|A\cup B|$. <strong>Min-wise hashing:</strong> random permutation $\Rightarrow$ collision prob $\approx J$ (used for near-duplicate / similarity search).</li>
+      <li><strong>LSI:</strong> term-document matrix $A$; $A^TA$ (doc–doc) vs $AA^T$ (term–term); truncated SVD gives latent topics; query scored vs rows via cosine similarity.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>14. Statistical Queries, Parity, Hardness</h2>
+    <h3>14.1 SQ model</h3>
+    <ul>
+      <li>Learner chooses $\phi(x,y)\in[-1,1]$; oracle returns $q$ with $|q-\mathbb E[\phi(x,C(x))]|\le\tau$ (tolerance $\tau$).</li>
+      <li>Simulate one query from samples: Hoeffding $\Rightarrow$ $m = O(\frac{1}{\tau^2}\log\frac{1}{\delta})$; for $Q$ queries, union bound $\Rightarrow$ $\log(Q/\delta)$.</li>
+      <li><strong>SQ-learnable $\Rightarrow$ PAC-learnable</strong> (with sample blow-up).</li>
+    </ul>
+    <h3>14.2 RCN / noise</h3>
+    <ul>
+      <li>Flipped label $\tilde y = zy$, $\mathbb E[z]=1-2\eta$. Then $\mathbb E[\phi(x,\tilde y)]=(1-2\eta)\mathbb E[\phi(x,y)]$; divide by $1-2\eta$, budget tolerance $\tau'=(1-2\eta)\tau$.</li>
+    </ul>
+    <h3>14.3 Monotone conjunctions and $\tau$</h3>
+    <ul>
+      <li>Query $\phi_i(x,y)=\mathbf{1}[x_i=0\wedge y=1]$. Oracle can be wrong by $\tau$ on <em>each</em> estimate; a bad literal kept because the answer was underestimated by $\tau$ can contribute up to $2\tau$ true error. Union over $n$ literals ⇒ use
+        $$\tau \le \frac{\epsilon}{2n}$$
+        to guarantee total error $\le\epsilon$.</li>
+    </ul>
+    <h3>14.4 SQ Perceptron (noisy conditional mean)</h3>
+    <ul>
+      <li>Data from $D$, $\|x\|_2\le R$, separable by unit $w^*$ with margin $y(w^{*T}x)\ge\gamma>0$. Exact mistake-direction mean $v_t=\mathbb E[yx\mid y(w_t^Tx)<0]$ satisfies $w^{*T}v_t\ge\gamma$.</li>
+      <li>Oracle returns $\tilde v_t$ with <strong>per-coordinate</strong> error $\le\tau$ ⇒ $\|\tilde v_t-v_t\|_2\le \tau\sqrt d$. Update $w_{t+1}=w_t+\tilde v_t$.</li>
+      <li><strong>Lower bound on progress:</strong> $w^{*T}\tilde v_t\ge w^{*T}v_t-\|\tilde v_t-v_t\|_2\ge \gamma-\tau\sqrt d$, so $w^{*T}w_t\ge t(\gamma-\tau\sqrt d)$.</li>
+      <li><strong>Upper bound on norm:</strong> on mistakes $w_t^Tv_t<0$, so $w_t^T\tilde v_t\le \|w_t\|\tau\sqrt d$; and $\|\tilde v_t\|\le R+\tau\sqrt d$. Hence $\|w_{t+1}\|^2\le \|w_t\|^2+2\tau\sqrt d\|w_t\|+(R+\tau\sqrt d)^2$, which yields $\|w_t\|\le t\tau\sqrt d+\sqrt{tB}$ with $B=(R+\tau\sqrt d)^2$.</li>
+      <li><strong>Combine</strong> with $w^{*T}w_t\le\|w_t\|$: need the linear coefficient in $t$ to stay positive when matched to the upper bound ⇒
+        $$\tau < \frac{\gamma}{2\sqrt d}$$
+        (necessary for the standard potential argument to close; if $\tau$ is too large, $\|w_t\|$ can grow too fast relative to $w^{*T}w_t$).</li>
+      <li><strong>Coordinate query:</strong> $\phi_j(x,y)=y\,x_j\,\mathbf{1}[y(w^Tx)<0]$; estimate all $d$ coords to $\pm\tau$ ⇒ $m=O(\frac{1}{\tau^2}\log\frac{d}{\delta})$.</li>
+    </ul>
+    <h3>14.5 Parity / LPN / hardness</h3>
+    <ul>
+      <li>Parity with noise (LPN): SQ lower bounds and representation hardness.</li>
+      <li><strong>SQ-dimension (idea):</strong> many nearly orthogonal concepts ⇒ many queries to distinguish.</li>
+      <li><strong>3-coloring $\to$ learning 3-term DNF:</strong> $+$ on vertices, $-$ on edges; consistent DNF encodes a coloring ⇒ NP-hard learning.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>15. Intuition & facts (mostly not above)</h2>
+    <p class="small">Skip this if you already internalized the numbered sections; it avoids re-listing $\tau$ bounds, boosting sandwiches, JL $K$, PAC formulas, etc.</p>
+
+    <h3>15.1 Which tail bound?</h3>
+    <ul>
+      <li><strong>Markov</strong> ($X\ge0$): $\Pr[X\ge a]\le \mathbb E[X]/a$ — only need a mean; usually a stepping stone.</li>
+      <li><strong>Chebyshev:</strong> $\Pr[|X-\mu|\ge t]\le \mathrm{Var}(X)/t^2$ — polynomial decay; good when you control variance but not boundedness.</li>
+      <li><strong>Hoeffding</strong> (bounded i.i.d.): see <strong>§3.4</strong> — exponential decay in $n\Delta^2$; drives PAC counting, SQ simulation, CIs.</li>
+      <li><strong>Azuma / bounded differences:</strong> martingale with bounded steps ⇒ Hoeffding-like tails without full independence — <strong>branching boosting</strong> random-walk view (§7).</li>
+    </ul>
+
+    <h3>15.2 Algebra habits</h3>
+    <ul>
+      <li>$1-x\le e^{-x}$ turns products $(1-\epsilon)^m$ into $e^{-\epsilon m}$ so you can solve for $m$ in one line.</li>
+      <li>Tighter $\ln(1-x)$ bounds (RWM): already in <strong>§2.3</strong>.</li>
+    </ul>
+
+    <h3>15.3 Union bound — what you are “paying for”</h3>
+    <ul>
+      <li>$\Pr(\cup_i E_i)\le\sum_i\Pr(E_i)$: to make failure $\le\delta$, each rare event typically needs probability $\delta/(\text{#events})$.</li>
+      <li>That is why sample size often picks up $\ln|\mathcal{C}|$, $\ln(m^2)$ for JL pairs, or $\ln Q$ for $Q$ statistical queries — not because each event is harder, but because there are many of them.</li>
+    </ul>
+
+    <h3>15.4 Why $\epsilon$ vs $\epsilon^2$ shows up</h3>
+    <ul>
+      <li><strong>One fixed hypothesis</strong> on a hold-out: empirical error concentrates at rate $1/\sqrt n$ ⇒ to nail error within $\epsilon$ need $n\sim 1/\epsilon^2$ (§3.4).</li>
+      <li><strong>Uniform</strong> over a rich class: same “variance scale” theme via VC (§4.2) — empirical error simultaneously close for all $h$.</li>
+      <li><strong>Realizable finite class</strong>: consistency is a <em>product</em> of per-example events, giving $(1-\epsilon)^m$ and often $m\sim 1/\epsilon$ instead (§3.1).</li>
+    </ul>
+
+    <h3>15.5 Domain adaptation / shift (TDS notes)</h3>
+    <ul>
+      <li><strong>Joint error</strong> $\lambda = \min_{c\in\mathcal{C}}\bigl(\mathrm{err}_{\mathrm{train}}(c)+\mathrm{err}_{\mathrm{test}}(c)\bigr)$: best compromise target across domains.</li>
+      <li><strong>Test bound:</strong> $\mathrm{err}_{\mathrm{test}}(h)\le \mathrm{err}_{\mathrm{train}}(h)+\lambda+\mathrm{disc}(D_{\mathrm{train}},D_{\mathrm{test}})$ where discrepancy measures how much disagreement between classifiers in $\mathcal{C}$ shifts between domains.</li>
+      <li><strong>Intuition:</strong> low train error is useless if (i) no good joint classifier exists ($\lambda$ large) or (ii) train and test disagree on which concepts separate points ($\mathrm{disc}$ large).</li>
+    </ul>
+
+    <h3>15.6 Projection / SQ “shape” (pointers only)</h3>
+    <ul>
+      <li><strong>JL:</strong> dimension $K$ scales with $\log(\text{#points})$ because you union-bound over <em>pairs</em>, not all functions — details in <strong>§9</strong>.</li>
+      <li><strong>SQ:</strong> per-coordinate noise $\tau$ blows up to $\ell_2$ noise $\Theta(\tau\sqrt d)$ when you stack coordinates — that is why margin proofs need $\tau$ small in $d$; see <strong>§14</strong>.</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>
