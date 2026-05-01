@@ -254,11 +254,23 @@
     <h3>5.1 Regression Basics</h3>
     <ul>
       <li><strong>Bayes regressor:</strong> for squared loss, $g^*(x)=\mathbb{E}[Y|X=x]$ minimizes $\mathbb{E}[(Y-g(X))^2]$.</li>
-      <li><strong>OLS (matrix):</strong> minimize $\|Xw-y\|^2$; gradient $2X^T(Xw-y)$; normal equations $X^TXw = X^Ty$ ⇒ $w = (X^TX)^{-1}X^Ty$.</li>
+      <li><strong>OLS (matrix):</strong> minimize $\|Xw-y\|^2$; FOC $X^TXw=X^Ty$ ⇒ $w=(X^TX)^{-1}X^Ty$. (Gradient conventions in <strong>§5.1b</strong>.)</li>
       <li><strong>Simple linear regression</strong> $y = \beta_0 + \beta_1 x$:
         $$\beta_1 = \frac{\mathrm{cov}(x,y)}{\mathrm{var}(x)}, \qquad \beta_0 = \bar{y} - \beta_1\bar{x}.$$
       </li>
       <li><strong>Ridge:</strong> minimize $\|Xw-y\|^2 + \lambda\|w\|^2$ ⇒ $w = (X^TX+\lambda I)^{-1}X^Ty$.</li>
+    </ul>
+
+    <h3>5.1b OLS gradient — why $X^T(Xw-y)$</h3>
+    <p class="small">$X\in\mathbb R^{n\times d}$, $w\in\mathbb R^d$, $y\in\mathbb R^n$, prediction $\hat y=Xw$, residual $e=Xw-y$.</p>
+    <ul>
+      <li><strong>SSE (clean $\tfrac12$):</strong> $L(w)=\frac12\|Xw-y\|_2^2=\frac12 e^Te$. Then
+        $$\nabla_w L = X^T(Xw-y)=X^Te.$$
+        Set $\nabla L=0$ ⇒ normal equations $X^TXw=X^Ty$.</li>
+      <li><strong>No $\tfrac12$:</strong> loss $\|Xw-y\|^2$ has gradient $2X^T(Xw-y)$ — same direction, different GD step scaling.</li>
+      <li><strong>MSE:</strong> $\frac1n\|Xw-y\|^2$ has gradient $\frac{2}{n}X^T(Xw-y)$.</li>
+      <li><strong>Expand:</strong> $L=\frac12(w^TX^TXw-2w^TX^Ty+y^Ty)$; $X^TX$ symmetric ⇒ $\nabla(w^TX^TXw)=2X^TXw$, $\nabla(w^TX^Ty)=X^Ty$ ⇒ $\nabla L=X^TXw-X^Ty=X^T(Xw-y)$.</li>
+      <li><strong>Chain rule:</strong> $\partial L/\partial e=e$ for $L=\frac12 e^Te$; $\partial e/\partial w=X$ ⇒ (column-gradient layout) $\nabla_w L=X^Te$.</li>
     </ul>
 
     <h3>5.2 Bias–Variance (scalar form + Ridge formulas)</h3>
@@ -492,16 +504,19 @@
         $$\tau \le \frac{\epsilon}{2n}$$
         to guarantee total error $\le\epsilon$.</li>
     </ul>
-    <h3>14.4 SQ Perceptron (noisy conditional mean)</h3>
+    <h3>14.4 SQ Perceptron — why $\tau < \gamma/(2\sqrt d)$</h3>
+    <p class="small"><strong>Setup.</strong> $\|x\|_2\le R$; unit separator $\|w^*\|_2=1$ with margin $y(w^{*T}x)\ge\gamma$. Let $v_t=\mathbb E[yx\mid y(w_t^Tx)<0]$ (mean gradient on mistake region). SQ oracle returns $\tilde v_t$ with per-coordinate error $\le\tau$, so $\|\tilde v_t-v_t\|_2\le A:=\tau\sqrt d$. Update $w_{t+1}=w_t+\tilde v_t$.</p>
     <ul>
-      <li>Data from $D$, $\|x\|_2\le R$, separable by unit $w^*$ with margin $y(w^{*T}x)\ge\gamma>0$. Exact mistake-direction mean $v_t=\mathbb E[yx\mid y(w_t^Tx)<0]$ satisfies $w^{*T}v_t\ge\gamma$.</li>
-      <li>Oracle returns $\tilde v_t$ with <strong>per-coordinate</strong> error $\le\tau$ ⇒ $\|\tilde v_t-v_t\|_2\le \tau\sqrt d$. Update $w_{t+1}=w_t+\tilde v_t$.</li>
-      <li><strong>Lower bound on progress:</strong> $w^{*T}\tilde v_t\ge w^{*T}v_t-\|\tilde v_t-v_t\|_2\ge \gamma-\tau\sqrt d$, so $w^{*T}w_t\ge t(\gamma-\tau\sqrt d)$.</li>
-      <li><strong>Upper bound on norm:</strong> on mistakes $w_t^Tv_t<0$, so $w_t^T\tilde v_t\le \|w_t\|\tau\sqrt d$; and $\|\tilde v_t\|\le R+\tau\sqrt d$. Hence $\|w_{t+1}\|^2\le \|w_t\|^2+2\tau\sqrt d\|w_t\|+(R+\tau\sqrt d)^2$, which yields $\|w_t\|\le t\tau\sqrt d+\sqrt{tB}$ with $B=(R+\tau\sqrt d)^2$.</li>
-      <li><strong>Combine</strong> with $w^{*T}w_t\le\|w_t\|$: need the linear coefficient in $t$ to stay positive when matched to the upper bound ⇒
-        $$\tau < \frac{\gamma}{2\sqrt d}$$
-        (necessary for the standard potential argument to close; if $\tau$ is too large, $\|w_t\|$ can grow too fast relative to $w^{*T}w_t$).</li>
-      <li><strong>Coordinate query:</strong> $\phi_j(x,y)=y\,x_j\,\mathbf{1}[y(w^Tx)<0]$; estimate all $d$ coords to $\pm\tau$ ⇒ $m=O(\frac{1}{\tau^2}\log\frac{d}{\delta})$.</li>
+      <li><strong>Progress (lower bound on $w^{*T}w_t$).</strong> Decompose $w^{*T}\tilde v_t=w^{*T}v_t+w^{*T}(\tilde v_t-v_t)$. On mistakes, margin gives $w^{*T}v_t\ge\gamma$. Worst noise: Cauchy–Schwarz with $\|w^*\|=1$ gives $w^{*T}(\tilde v_t-v_t)\ge -A$. So each step adds at least $\gamma-A$ to alignment:
+        $$w^{*T}w_t\ge t(\gamma-A).$$</li>
+      <li><strong>Norm (upper bound on $\|w_t\|$).</strong> Expand $\|w_{t+1}\|^2=\|w_t\|^2+2w_t^T\tilde v_t+\|\tilde v_t\|^2$. Conditioned on mistakes, $w_t^Tv_t=\mathbb E[y(w_t^Tx)\mid\text{mistake}]<0$. Noise contributes at most $\|w_t\|A$ to $w_t^T(\tilde v_t-v_t)$, so $2w_t^T\tilde v_t\le 2A\|w_t\|$. Also $\|\tilde v_t\|\le R+A$. Hence
+        $$\|w_{t+1}\|^2\le \|w_t\|^2+2A\|w_t\|+(R+A)^2 \quad\Rightarrow\quad \|w_t\|\le tA+\sqrt{t}(R+A).$$</li>
+      <li><strong>Close the potential.</strong> Always $w^{*T}w_t\le\|w_t\|$. Substitute the bounds:
+        $$t(\gamma-A)\le tA+\sqrt{t}(R+A)\quad\Longleftrightarrow\quad t(\gamma-2A)\le \sqrt{t}(R+A).$$
+        A fixed $t$ can only satisfy this for all large ranges if the left side does not grow too slowly: in particular we need a <em>positive</em> linear coefficient $\gamma-2A$ so the alignment lower bound can outrun the $\sqrt t$ term from the norm recurrence. Thus $\gamma-2A>0$, i.e.
+        $$\tau < \frac{\gamma}{2\sqrt d}.$$
+        If $\tau$ is too large, noise can add along $w_t$ and inflate $\|w_t\|$ while $w^{*T}w_t$ gains only $\gamma-A$ per step — the perceptron potential argument breaks.</li>
+      <li><strong>Queries:</strong> $\phi_j(x,y)=y\,x_j\,\mathbf{1}[y(w^Tx)<0]$; all $d$ coordinates to $\pm\tau$ ⇒ $m=O(\frac{1}{\tau^2}\log\frac{d}{\delta})$.</li>
     </ul>
     <h3>14.5 Parity / LPN / hardness</h3>
     <ul>
